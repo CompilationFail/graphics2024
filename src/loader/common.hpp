@@ -7,6 +7,7 @@
 #include <cctype>
 #include <fstream>
 #include <GL/glew.h>
+#include <cstring>
 
 namespace fs = std::filesystem;
 using Path = fs::path;
