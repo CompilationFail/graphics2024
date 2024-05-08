@@ -1,0 +1,8 @@
+add_subdirectory(glew)
+add_subdirectory(glfw)
+add_subdirectory(glm)
+add_subdirectory(tinygltf)
+add_subdirectory(imgui)
+add_subdirectory(microprofile)
+add_subdirectory(stb)
+# add_subdirectory(freetype)
