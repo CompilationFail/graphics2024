@@ -1,0 +1,4 @@
+./build
+./models
+./*.exe
+interaction_guide.md
