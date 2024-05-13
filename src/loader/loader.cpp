@@ -85,11 +85,11 @@ Mesh::Mesh(const Path &path) {
                 }
                 char *p1 = strstr(pos, "/");
                 char *p2 = p1 && p1 < nxt? strstr(p1 + 1, "/") : nullptr;
-                sscanf_s(pos, "%u", &ind.positionIndex);
+                sscanf(pos, "%u", &ind.positionIndex);
                 if(p1 && p1 + 1 != p2) {
-                    sscanf_s(p1 + 1, "%u", &ind.uvIndex);
+                    sscanf(p1 + 1, "%u", &ind.uvIndex);
                     if(p2) {
-                        sscanf_s(p2 + 1, "%u", &ind.normalIndex);
+                        sscanf(p2 + 1, "%u", &ind.normalIndex);
                     }
                 }
                 pos = nxt;

@@ -13,7 +13,7 @@
 #include "loader/bound.hpp"
 #include "loader/particle.hpp"
 
-static const int width = 1300, height = 1300;
+static const int width = 1200, height = 800;
 
 /*
 

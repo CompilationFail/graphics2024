@@ -61,7 +61,7 @@ int MaterialLib::load(const Path &path) {
             pool[name] = cur;
             count++;
         } else if(str_equal(pos, "Ns ")) {
-            if(sscanf_s(pos + 3, "%f", &cur -> Ns) != 1) {
+            if(sscanf(pos + 3, "%f", &cur -> Ns) != 1) {
                 warn(1, "Ns: Expected 1 float, found: %s", pos + 3);
             }
         } else if(str_equal(pos, "Ka ")) {
@@ -71,7 +71,7 @@ int MaterialLib::load(const Path &path) {
         } else if(str_equal(pos, "Ks ")) {
             readvec3(pos + 3, &cur -> Ks, "Ks");
         } else if(str_equal(pos, "illum ")) {
-            if(sscanf_s(pos + 6, "%u", &cur -> illum) != 1) {
+            if(sscanf(pos + 6, "%u", &cur -> illum) != 1) {
                 warn(1, "illum: Expected 1 int, found: %s", pos + 3);
             }
         } else if(str_equal(pos, "map")) {

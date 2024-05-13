@@ -2,13 +2,13 @@
 
 static const char *vertex_shader_text = R"(
 #version 330 core
-#extension GL_ARB_explicit_uniform_location : enable
+// #extension GL_ARB_explicit_uniform_location : enable
 
 
-layout(location = 0) uniform vec3 center;
-layout(location = 1) uniform float v_angle;
-layout(location = 2) uniform float particle_size;
-layout(location = 3) uniform mat4 transform;
+uniform vec3 center;
+uniform float v_angle;
+uniform float particle_size;
+uniform mat4 transform;
 
 layout(location = 0) in vec3 direction;
 layout(location = 1) in vec3 diffuse;
@@ -32,18 +32,18 @@ void main() {
 
 static const char *fragment_shader_text = R"(
 #version 330 core
-#extension GL_ARB_explicit_uniform_location : enable
+// #extension GL_ARB_explicit_uniform_location : enable
 
 in vec3 o_pos;
 in vec3 o_norm;
 in vec3 o_diffuse;
 
-layout(location = 4) uniform vec3 camera;
+uniform vec3 camera;
 struct LightSource {
     vec3 position;
     vec3 intense;
 };
-layout(location = 5) uniform LightSource light;
+uniform LightSource light;
 
 layout(location = 0) out vec4 frag_color;
 
@@ -70,7 +70,12 @@ void main() {
 )";
 
 ParticleShader::ParticleShader() : Shader(vertex_shader_text, fragment_shader_text) {
-    ;
+    _center = loc("center");
+    _v_angle = loc("v_angle");
+    _particle_size = loc("particle_size");
+    _transform = loc("transform");
+    _camera = loc("camera");
+    _light = loc("light.position");
 }
 void ParticleShader::set_static(glm::vec3 center, float particle_size) {
     glUniform3f(_center, center.x, center.y, center.z);

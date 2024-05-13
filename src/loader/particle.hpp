@@ -13,7 +13,8 @@ struct VertexInfo {
 };
 
 class ParticleShader: public Shader {
-    static const int _center = 0, _v_angle = 1, _particle_size = 2, _transform = 3, _camera = 4, _light = 5;
+    // static const int _center = 0, _v_angle = 1, _particle_size = 2, _transform = 3, _camera = 4, _light = 5;
+    int _center, _v_angle, _particle_size, _transform, _camera, _light;
 public:
     ParticleShader();
     void set_static(glm::vec3 center, float particle_size);

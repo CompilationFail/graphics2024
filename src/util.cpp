@@ -1,4 +1,5 @@
 #include <GL/glew.h>
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -16,27 +17,31 @@ static void error_callback(int error, const char* description) {
 }
  
 GLFWwindow *window_init(int width = 800, int height = 600, const char *title = "no title", bool allow_transparent = false, int vsync = 0) {
-    printf("initiating glfw window ...");
-    glfwSetErrorCallback(error_callback);
+    printf("[Initiating glfw window ...\n");
+    // glfwSetErrorCallback(error_callback);
     if(glfwInit() == GLFW_FALSE) {
         throw std::runtime_error("fail to init glfw");
     }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     if(allow_transparent) glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-#ifdef __APPLE__ // for macos
+#ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-    GLFWwindow *window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(width, height, "Test OpenGL", nullptr, nullptr);
     if (!window)
     {
         glfwTerminate();
         throw std::runtime_error("failed to create window");
     }
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(vsync);
-    printf("   done\n");
+    // glfwSwapInterval(vsync);
+    // glViewport(0, 0, width, height);
+
+    printf("  OpenGL Version: %s\n", glGetString(GL_VERSION));
+    printf("  Renderer: %s\n", glGetString(GL_RENDERER));
+    printf("done]\n");
     return window;
 }
 

@@ -24,14 +24,20 @@ struct LightSource {
 
 class Shader {
     GLuint _program;
+    std::map <std::string, GLint> uniforms;
 public:
     Shader(const char* vert, const char* frag);
     ~Shader();
+    GLint loc(const char*);
     void use();
+    void init_uniform(std::vector <std::string>);
+    void check_uniform();
+    GLint uniform(std::string);
 };
 
 class PhongShader: public Shader {
-    static const GLint trans = 0, Ka = 1, Kd = 2, scale = 3, type = 4, camera = 5, light = 6;
+    // const GLint trans = 0, Ka = 1, Kd = 2, scale = 3, type = 4, camera = 5, light = 6;
+    GLint trans, Ka, Kd, scale, type, camera, light;
 public:
     PhongShader();
     void set_transform(glm::mat4);

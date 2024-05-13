@@ -67,9 +67,24 @@ void Shader::use() {
     glUseProgram(_program);
 }
 
+GLint Shader::loc(const char *name) {
+    return glGetUniformLocation(_program, name);
+}
+
 Shader::~Shader() {
     printf("shader destroyed\n");
     glDeleteShader(_program);
+}
+void Shader::init_uniform(std::vector <std::string> names) {
+    for(auto &name: names) uniforms[name] = loc(name.c_str());
+}
+void Shader::check_uniform() {
+    for(auto [name, loc]: uniforms) {
+        printf("Uniform %s location = %d\n", name.c_str(), loc);
+    }
+}
+GLint Shader::uniform(std::string name) {
+    return uniforms[name];
 }
 
 
@@ -77,13 +92,13 @@ namespace Phong {
 
 static const char *vertex_shader_text = R"(
 #version 330 core
-#extension GL_ARB_explicit_uniform_location : enable
+// #extension GL_ARB_explicit_uniform_location : enable
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec2 uv;
 layout(location = 2) in vec3 normal;
 
-layout(location = 0) uniform mat4 transform;
+uniform mat4 transform;
 
 out vec2 o_uv;
 out vec3 o_pos;
@@ -99,23 +114,23 @@ void main() {
 
 static const char *fragment_shader_text = R"(
 #version 330 core
-#extension GL_ARB_explicit_uniform_location : enable
+// #extension GL_ARB_explicit_uniform_location : enable
 
 in vec2 o_uv;
 in vec3 o_pos;
 in vec3 o_norm;
 
 uniform sampler2D tex;
-layout(location = 1) uniform vec3 m_ka;
-layout(location = 2) uniform vec3 m_kd;
-layout(location = 3) uniform vec3 tex_scale;
-layout(location = 4) uniform int m_type;
-layout(location = 5) uniform vec3 camera;
+uniform vec3 m_ka;
+uniform vec3 m_kd;
+uniform vec3 tex_scale;
+uniform int m_type;
+uniform vec3 camera;
 struct LightSource {
     vec3 position;
     vec3 intense;
 };
-layout(location = 6) uniform LightSource light;
+uniform LightSource light;
 
 layout(location = 0) out vec4 frag_color;
 
@@ -125,7 +140,7 @@ void main() {
     if(m_type == 1) {
         color = vec3(texture(tex, vec2(o_uv.x / tex_scale.x, o_uv.y / tex_scale.y)));
     } else {
-        color = m_kd;
+        color = vec3(0,0,0);//m_kd;
     }
     vec3 i = light.position - o_pos;
     float r = dot(i, i);
@@ -148,7 +163,7 @@ void main() {
 
     float alpha = dot(o_norm, h);
     
-    vec3 specular = intense * pow(max(0, alpha), 100);
+    vec3 specular = color * intense * pow(max(0, alpha), 100);
     if(alpha < 0) {
         specular = vec3(0,0,0);
     }
@@ -157,27 +172,22 @@ void main() {
 
     // frag_color = vec4(diffuse, 0);
     frag_color = vec4(diffuse + specular + ambient, 0);
+    // frag_color = vec4(color, 0);
     // frag_color = vec4(specular, 0);
 }
 )";
 
 }
 
-
-PhongShader::PhongShader(): Shader(Phong::vertex_shader_text, Phong::fragment_shader_text) {
-    /*trans = glGetUniformLocation(_program, "transform");
-    CheckGLError();
-    Ka = glGetUniformLocation(_program, "m_ka");
-    CheckGLError();
-    Kd = glGetUniformLocation(_program, "m_kd");
-    CheckGLError();
-    type = glGetUniformLocation(_program, "m_type");
-    CheckGLError();
-    scale = glGetUniformLocation(_program, "tex_scale");
-    printf("uniforms: %d %d %d %d\n", trans, Ka, Kd, type);
-    if(trans == -1 || Ka == -1 || Kd == -1 || type == -1) {
-        warn(2, "[ERROR] Fail to get uniform location");
-    }*/
+PhongShader::PhongShader() : Shader(Phong::vertex_shader_text, Phong::fragment_shader_text) {
+    trans = loc("transform");
+    Ka = loc("m_ka");
+    Kd = loc("m_kd");
+    type = loc("m_type");
+    scale = loc("tex_scale");
+    camera = loc("camera");
+    light = loc("light.position");
+    // printf("%d %d %d %d %d %d %d\n", trans, Ka, Kd, type, scale, camera, light);
 }
 void PhongShader::set_transform(glm::mat4 transform) {
     glUniformMatrix4fv(trans, 1, false, (GLfloat *)&transform);

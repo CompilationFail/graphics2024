@@ -9,7 +9,7 @@ Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
-map_Kd Textures\\Atmosphere_2K.png
+map_Kd Textures/Atmosphere_2K.png
 illum 2
 
 newmtl Venus
@@ -20,6 +20,6 @@ Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
-map_Kd Textures\\Diffuse_1K.png
-map_Bump Textures\\Bump_1K.png
+map_Kd Textures/Diffuse_1K.png
+map_Bump Textures/Bump_1K.png
 illum 2

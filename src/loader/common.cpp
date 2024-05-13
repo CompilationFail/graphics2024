@@ -43,14 +43,14 @@ std::string unescape(const char *str) {
 }
 
 bool readvec3(const char *str, glm::vec3 *dst, const char *arg) {
-    if(sscanf_s(str, "%f%f%f", &dst -> x, &dst -> y, &dst -> z) != 3) {
+    if(sscanf(str, "%f%f%f", &dst -> x, &dst -> y, &dst -> z) != 3) {
         warn(2, "While parsing %s : Expected 3 floats, finds: %s", arg, str);
         return 0;
     }
     return 1;
 }
 bool readvec2(const char *str, glm::vec2 *dst, const char *arg) {
-    if(sscanf_s(str, "%f%f", &dst -> x, &dst -> y) != 2) {
+    if(sscanf(str, "%f%f", &dst -> x, &dst -> y) != 2) {
         warn(2, "While parsing %s : Expected 2 floats, finds: %s", arg, str);
         return 0;
     }
