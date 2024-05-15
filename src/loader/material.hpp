@@ -37,6 +37,6 @@ class MaterialLib {
 public:
     ~MaterialLib();
     int load(const Path &path);
+    void add(std::string name, Material *material);
     Material* operator [] (const std::string &str);
 };
-

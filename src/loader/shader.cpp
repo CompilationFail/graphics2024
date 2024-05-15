@@ -140,8 +140,12 @@ void main() {
     if(m_type == 1) {
         color = vec3(texture(tex, vec2(o_uv.x / tex_scale.x, o_uv.y / tex_scale.y)));
     } else {
-        color = vec3(0,0,0);//m_kd;
+        color = m_kd;
     }
+    // frag_color = vec4(color,1);
+    // frag_color = vec4(vec3(0.5,0.5,0.5)+o_norm/2,1);
+    // frag_color = vec4(o_pos / 5 + vec3(0.5,0.5,0.5), 1);
+    // return;
     vec3 i = light.position - o_pos;
     float r = dot(i, i);
     i = normalize(i);
@@ -163,12 +167,12 @@ void main() {
 
     float alpha = dot(o_norm, h);
     
-    vec3 specular = color * intense * pow(max(0, alpha), 100);
+    vec3 specular = color * intense * pow(max(0, alpha), 200);
     if(alpha < 0) {
         specular = vec3(0,0,0);
     }
 
-    vec3 ambient = color * light.intense * m_ka * 1e-6;
+    vec3 ambient = color * light.intense * 0.02;
 
     // frag_color = vec4(diffuse, 0);
     frag_color = vec4(diffuse + specular + ambient, 0);
@@ -187,7 +191,7 @@ PhongShader::PhongShader() : Shader(Phong::vertex_shader_text, Phong::fragment_s
     scale = loc("tex_scale");
     camera = loc("camera");
     light = loc("light.position");
-    // printf("%d %d %d %d %d %d %d\n", trans, Ka, Kd, type, scale, camera, light);
+    // printf("trans: %d Ka:%d Kd:%d type:%d scale:%d camera:%d light:%d\n", trans, Ka, Kd, type, scale, camera, light);
 }
 void PhongShader::set_transform(glm::mat4 transform) {
     glUniformMatrix4fv(trans, 1, false, (GLfloat *)&transform);

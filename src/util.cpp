@@ -29,7 +29,7 @@ GLFWwindow *window_init(int width = 800, int height = 600, const char *title = "
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-    GLFWwindow *window = glfwCreateWindow(width, height, "Test OpenGL", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(width, height, title, nullptr, nullptr);
     if (!window)
     {
         glfwTerminate();

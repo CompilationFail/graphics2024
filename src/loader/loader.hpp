@@ -17,6 +17,7 @@ struct Vertex {
     glm::vec2 uv;      // location 1
     glm::vec3 normal;   // location 2
     Vertex();
+    Vertex(glm::vec3 position, glm::vec2 uv, glm::vec3 normal);
 };
 
 struct VertexIndices {
@@ -70,9 +71,16 @@ public:
         printf("Delete program\n");
         shader = nullptr;
     }
+    /*
+     * Load from a [.obj] file
+     */
     Mesh(const Path &path);
+    /*
+     * To generate a triangle
+     */
+    Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 color);
     void init_draw();
-    void draw(const glm::mat4&, const glm::vec3 &, const LightSource &) const;
+    void draw(const glm::mat4& transform, const glm::vec3 &camera, const LightSource &light) const;
     Bound bound();
     void apply_transform(glm::mat4);
 };

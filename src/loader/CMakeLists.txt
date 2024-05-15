@@ -6,6 +6,7 @@ add_library(
     material.hpp material.cpp 
     shader.hpp shader.cpp 
     particle.hpp particle.cpp
+    scene.hpp scene.cpp
     # text.hpp text.cpp
 )
 target_compile_features(loader PRIVATE cxx_std_17)

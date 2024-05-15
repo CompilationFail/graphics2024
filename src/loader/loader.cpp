@@ -1,9 +1,12 @@
 #include "loader.hpp"
+#include "glm/geometric.hpp"
 #include <stb_image.h>
 
 Vertex::Vertex() : position(0, 0, 0),
                    uv(0, 0),
                    normal(0, 0, 0) {}
+Vertex::Vertex(glm::vec3 position, glm::vec2 uv, glm::vec3 normal)
+    : position(position), uv(uv), normal(normal) {}
 
 Object::Object(const std::string &name,
                const std::vector<uint32_t> &triangles,
@@ -71,6 +74,13 @@ Mesh::Mesh(const Path &path) {
         } else if(str_equal(pos, "s ")) {
             warn(0, "Ignore: %s", pos);
         } else if(str_equal(pos, "usemtl")) {
+            
+            /*if(count) {
+                objects.emplace_back(name, triangles, cur);
+                triangles.clear();
+            }
+            count++;*/
+
             cur = (*mtl)[pos + 7];
         } else if(str_equal(pos, "f ")) {
             pos += 2;
@@ -215,12 +225,27 @@ void Mesh::draw(const glm::mat4 &trans, const glm::vec3 &camera, const LightSour
     shader->set_transform(trans);
     for(const auto &object: objects) {
         shader->set_material(object.material());
-        // printf("%s %p\n", object.c_name(), object.material());
+        printf("%s %p\n", object.c_name(), object.material());
         object.draw();
     }
 }
 
-
-
+Mesh::Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 color) {
+    Material *material = new Material(); material -> Kd = color;
+    mtl = std::make_unique <MaterialLib> ();
+    mtl -> add("", material);
+    normal = glm::normalize(normal);
+    vertices.emplace_back(a, glm::vec2(0), normal);
+    vertices.emplace_back(b, glm::vec2(0), normal);
+    vertices.emplace_back(c, glm::vec2(0), normal);
+    objects.emplace_back(std::string("triangle"), std::vector<uint32_t>{0,1,2}, material);
+    try {
+        shader = std::make_unique <PhongShader> ();
+    } catch (std::string msg) {
+        warn(2, "[ERROR] Fail to load shader program: %s", msg.c_str());
+        exit(1);
+    }
+    vertex_buffer = 0;
+}
 
 

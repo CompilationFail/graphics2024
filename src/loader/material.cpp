@@ -31,6 +31,11 @@ Material *MaterialLib::operator[](const std::string &str) {
     return nullptr;
 }
 
+void MaterialLib::add(std::string name, Material *material) {
+    materials.push_back(material);
+    pool[name] = material;
+}
+
 int MaterialLib::load(const Path &path) {
     printf("Mtl: Load from %s\n", path.u8string().c_str());
     clock_t begin_time = clock();

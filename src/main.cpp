@@ -25,13 +25,14 @@ TODO:
 
 class Application {
     GLFWwindow *window;
-    std::unique_ptr <Mesh> mesh;
+    std::unique_ptr <Mesh> mesh, ground;
     std::unique_ptr <ParticleSystem> ps;
     glm::mat4 model;
 public:
     Application(): mesh(nullptr) { }
     ~Application() {
         mesh = nullptr;
+        ground = nullptr;
         ps = nullptr;
         glfwDestroyWindow(window);
         printf("Window destroyed\n");
@@ -39,8 +40,8 @@ public:
         printf("Terminated..");
     }
     void init() {
-        light.position = glm::vec3(30, 3, 30);
-        light.intense = glm::vec3(1000, 1000, 1000);
+        light.position = glm::vec3(1.65, 1.24, -2.1);
+        light.intense = glm::vec3(5, 5, 5);
         window = window_init(width, height, "Venus??");
         glew_init();
         model = glm::mat4(1.f);
@@ -50,13 +51,15 @@ public:
     void load(const Path &path) {
         try{
             mesh = std::make_unique <Mesh> (path);
-            Bound b = mesh -> bound();
-            mesh -> apply_transform(b.to_local());
+            /*Bound b = mesh -> bound();
+            mesh -> apply_transform(b.to_local());*/
             mesh -> init_draw();
         } catch(const char *e) {
             printf("%s\n", e);
         }
         printf("Mesh loaded from %s.\n", path.u8string().c_str());
+        ground = std::make_unique <Mesh> (glm::vec3(0,-1, 2000), glm::vec3(-2000,-1,-2000),glm::vec3(2000, -1, -2000), glm::vec3(0,1,0), glm::vec3(1,1,1));
+        ground -> init_draw();
         try{
             ps = std::make_unique <ParticleSystem> (2e-3, glm::vec3(0, 0, 0), 1.8, 2);
             ps -> generate(1e5);
@@ -105,9 +108,12 @@ public:
                 printf("%f %f %f\n", q.x,q.y,q.z);
             }
             break; */
-            mesh->draw(vp * glm::rotate(glm::mat4(1.f), float(now / 50 * rot_speed), glm::vec3(0, 1, 0)), Control::camera, light);
-            ps->set_particle_size(2e-3 * particle_size);
-            ps->draw(particle_number, vp, Control::camera, now / 100 * rot_speed, light);
+            // mesh->draw(vp * glm::rotate(glm::mat4(1.f), float(now / 50 * rot_speed), glm::vec3(0, 1, 0)), Control::camera, light);
+            // ground->draw(vp, Control::camera, light);
+            mesh->draw(vp, Control::camera, light);
+
+            // ps->set_particle_size(2e-3 * particle_size);
+            // ps->draw(particle_number, vp, Control::camera, now / 100 * rot_speed, light);
             render_ui();
             // break;
         }
