@@ -6,9 +6,9 @@
 #include "loader/shader.hpp"
 
 float debug_x, debug_y, debug_z;
-float particle_size = 1.5;
+/*float particle_size = 1.5;
 float rot_speed = 1;
-int particle_number = 4e4; 
+int particle_number = 4e4; */
 LightSource light;
 
 namespace Control {
@@ -127,17 +127,17 @@ void ui() {
         ImGui::Text("Mouse control: %s", enable_mouse_control ? "enabled" : "disabled");
         ImGui::SliderFloat("Speed", &speed, 0.f, 10.f);
         ImGui::SliderFloat("Mouse Sensitivity", &mouse_sensitivity, 0.f, 10.f);
-        ImGui::Text("Particle System");
+        /*ImGui::Text("Particle System");
         ImGui::SliderFloat("Particle size:", &particle_size, 0.1, 10);
         ImGui::SliderFloat("Rotate speed", &rot_speed, 0.1, 5);
-        ImGui::SliderInt("Particle number", &particle_number, 1000, 1e5);
+        ImGui::SliderInt("Particle number", &particle_number, 1000, 1e5);*/
         ImGui::Text("Light");
         ImGui::SliderFloat("l_pos.x:", &light.position.x, -100, 100);
         ImGui::SliderFloat("l_pos.y:", &light.position.y, -100, 100);
         ImGui::SliderFloat("l_pos.z:", &light.position.z, -100, 100);
-        ImGui::SliderFloat("intense.x:", &light.intense.x, 0, 2000);
-        ImGui::SliderFloat("intense.y:", &light.intense.y, 0, 2000);
-        ImGui::SliderFloat("intense.z:", &light.intense.z, 0, 2000);
+        ImGui::SliderFloat("intense.x:", &light.intense.x, 0, 200);
+        ImGui::SliderFloat("intense.y:", &light.intense.y, 0, 200);
+        ImGui::SliderFloat("intense.z:", &light.intense.z, 0, 200);
         /*ImGui::Text("Debug parameters");
         ImGui::SliderFloat("x:", &debug_x, -100, 100);
         ImGui::SliderFloat("y:", &debug_y, -100, 100);

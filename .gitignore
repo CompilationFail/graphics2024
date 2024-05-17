@@ -3,4 +3,5 @@
 /*.exe
 /imgui.ini
 **.DS_Store
-interaction_guide.md
+/interaction_guide.md
+/*.zip

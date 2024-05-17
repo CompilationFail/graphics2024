@@ -147,12 +147,18 @@ void main() {
     if(has_tex_norm == 1) {
         norm = vec3(texture(tex_norm, vec2(o_uv.x / tex_norm_scale.x, o_uv.y / tex_norm_scale.y)));
         norm = norm * 2 - vec3(1,1,1);
+        norm = normalize(norm);
+        vec3 tmp;
+        tmp.y = norm.z;
+        tmp.x = norm.x;
+        tmp.z = norm.y;
+        norm = tmp;
     }
-    norm = normalize(norm);
     // frag_color = vec4(norm, 1);
-    frag_color = vec4(vec3(0.5,0.5,0.5)+norm/2,1);
+    // frag_color = vec4(color, 1);
+    // frag_color = vec4(vec3(0.5,0.5,0.5)+norm/2,1);
     // frag_color = vec4(o_pos / 5 + vec3(0.5,0.5,0.5), 1);
-    return;
+    // return;
     vec3 i = light.position - o_pos;
     float r = dot(i, i);
     i = normalize(i);
@@ -197,12 +203,13 @@ PhongShader::PhongShader() : Shader(Phong::vertex_shader_text, Phong::fragment_s
     has_tex = loc("has_tex");
     has_tex_norm = loc("has_tex_norm");
     scale = loc("tex_scale");
-    norm_scale = loc("norm_tex_scale");
+    norm_scale = loc("tex_norm_scale");
     camera = loc("camera");
-    light = loc("light.position");
+    light_position = loc("light.position");
+    light_intense = loc("light.intense");
     tex = loc("tex");
     tex_norm = loc("tex_norm");
-    printf("trans: %d Ka:%d Kd:%d has_tex:%d has_tex_norm:%d scale:%d camera:%d light:%d tex:%d tex_norm:%d\n", trans, Ka, Kd, has_tex, has_tex_norm, scale, camera, light, tex, tex_norm);
+    printf("trans: %d Ka:%d Kd:%d has_tex:%d has_tex_norm:%d scale:%d camera:%d light:%d,%d tex:%d tex_norm:%d\n", trans, Ka, Kd, has_tex, has_tex_norm, scale, camera, light_position, light_intense, tex, tex_norm);
 }
 void PhongShader::set_transform(glm::mat4 transform) {
     glUniformMatrix4fv(trans, 1, false, (GLfloat *)&transform);
@@ -251,9 +258,9 @@ void PhongShader::set_material(Material *material) {
     }
 }
 void PhongShader::set_light(LightSource l) {
-    glUniform3f(light, l.position.x, l.position.y, l.position.z);
+    glUniform3f(light_position, l.position.x, l.position.y, l.position.z);
     CheckGLError();
-    glUniform3f(light + 1, l.intense.x, l.intense.y, l.intense.z);
+    glUniform3f(light_intense, l.intense.x, l.intense.y, l.intense.z);
     CheckGLError();
 }
 void PhongShader::set_camera(glm::vec3 cam) {

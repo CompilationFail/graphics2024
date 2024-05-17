@@ -80,7 +80,7 @@ public:
      */
     Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 color);
     void init_draw();
-    void draw(const glm::mat4& transform, const glm::vec3 &camera, const LightSource &light) const;
+    void draw(const glm::mat4& mvp, const glm::vec3 &camera, const LightSource &light) const;
     Bound bound();
     void apply_transform(glm::mat4);
 };

@@ -6,5 +6,5 @@ Ks 0.200000 0.200000 0.200000
 Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 0.000000
-map_Kd -s 1 1 1 Textures/色彩纹理图.bmp
-map_normal -s 100 100 100 Textures/法向图.bmp
+map_Kd -s 1 1 1 Textures/texture.bmp
+map_normal -s 1 1 1 Textures/normal.bmp

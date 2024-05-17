@@ -21,6 +21,13 @@ static const int width = 1200, height = 800;
 TODO:
 + map_Bump
 + shadow map
++ Normal mapping
+  To implement a correct mapping that applies no matter how the object is oriented
+  I need to put a tangent and bitangent vector for each vertex
+  which is not supported now.
+
+  In this program, it is specialize for the ground is simple and can be manually transformed.
+
 
 */
 
@@ -42,7 +49,7 @@ public:
     void init() {
         light.position = glm::vec3(1.65, 1.24, -2.1);
         light.intense = glm::vec3(10, 10, 10);
-        window = window_init(width, height, "Venus??");
+        window = window_init(width, height, "Ground and indoor planet");
         glew_init();
         model = glm::mat4(1.f);
         init_control(window);

@@ -96,6 +96,7 @@ int MaterialLib::load(const Path &path) {
                     }
                 }
                 Path texture_path = path.parent_path();
+                puts(pos);
                 texture_path /= Path(unescape(pos));
                 try {
                     cur -> texture = std::make_unique <Texture2D> (texture_path);
