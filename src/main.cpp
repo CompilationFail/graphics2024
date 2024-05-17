@@ -12,6 +12,7 @@
 #include "loader/loader.hpp"
 #include "loader/bound.hpp"
 #include "loader/particle.hpp"
+#include "loader/scene.hpp"
 
 static const int width = 1200, height = 800;
 
@@ -25,15 +26,14 @@ TODO:
 
 class Application {
     GLFWwindow *window;
-    std::unique_ptr <Mesh> mesh, ground;
-    std::unique_ptr <ParticleSystem> ps;
+    std::unique_ptr <Scene> scene;
+    // std::unique_ptr <Mesh> mesh, ground;
+    // std::unique_ptr <ParticleSystem> ps;
     glm::mat4 model;
 public:
-    Application(): mesh(nullptr) { }
+    Application(): scene(nullptr) { }
     ~Application() {
-        mesh = nullptr;
-        ground = nullptr;
-        ps = nullptr;
+        scene = nullptr;
         glfwDestroyWindow(window);
         printf("Window destroyed\n");
         glfwTerminate();
@@ -41,32 +41,31 @@ public:
     }
     void init() {
         light.position = glm::vec3(1.65, 1.24, -2.1);
-        light.intense = glm::vec3(5, 5, 5);
+        light.intense = glm::vec3(10, 10, 10);
         window = window_init(width, height, "Venus??");
         glew_init();
         model = glm::mat4(1.f);
         init_control(window);
+        scene = std::make_unique<Scene>();
         printf("Application initiated.\n");
     }
-    void load(const Path &path) {
+    void load(std::string name, const Path &path) {
         try{
-            mesh = std::make_unique <Mesh> (path);
-            /*Bound b = mesh -> bound();
-            mesh -> apply_transform(b.to_local());*/
-            mesh -> init_draw();
+            scene -> load_mesh(name, path);
         } catch(const char *e) {
             printf("%s\n", e);
         }
+        /*
         printf("Mesh loaded from %s.\n", path.u8string().c_str());
-        ground = std::make_unique <Mesh> (glm::vec3(0,-1, 2000), glm::vec3(-2000,-1,-2000),glm::vec3(2000, -1, -2000), glm::vec3(0,1,0), glm::vec3(1,1,1));
-        ground -> init_draw();
+        //ground = std::make_unique <Mesh> (glm::vec3(0,-1, 2000), glm::vec3(-2000,-1,-2000),glm::vec3(2000, -1, -2000), glm::vec3(0,1,0), glm::vec3(1,1,1));
+        // ground -> init_draw();
         try{
             ps = std::make_unique <ParticleSystem> (2e-3, glm::vec3(0, 0, 0), 1.8, 2);
             ps -> generate(1e5);
         } catch(const char *e) {
             printf("%s\n", e);
         }
-        printf("Particle system generated.\n");
+        printf("Particle system generated.\n");*/
     }
     glm::mat4 projection() {
         return glm::perspective(45.f, 1.f * width / height, .1f, 100.f);
@@ -77,6 +76,9 @@ public:
                glm::translate(glm::mat4(1.f), -camera);
     }*/
     void main_loop() {
+        puts("init draw");
+        scene -> init_draw();
+        scene -> model()["plant"] = glm::translate(glm::mat4(1.f), glm::vec3(0, -1, 0));
         puts("Enter main loop");
         auto last = glfwGetTime();
         int frame_count = 0;
@@ -109,8 +111,9 @@ public:
             }
             break; */
             // mesh->draw(vp * glm::rotate(glm::mat4(1.f), float(now / 50 * rot_speed), glm::vec3(0, 1, 0)), Control::camera, light);
-            // ground->draw(vp, Control::camera, light);
-            mesh->draw(vp, Control::camera, light);
+            /*ground->draw(vp, Control::camera, light);
+            mesh->draw(vp, Control::camera, light);*/
+            scene->render(vp, Control::camera, light);
 
             // ps->set_particle_size(2e-3 * particle_size);
             // ps->draw(particle_number, vp, Control::camera, now / 100 * rot_speed, light);
@@ -121,12 +124,20 @@ public:
 };
 
 int main(int argc, char **argv) {
-    if(argc <= 1) {
+    /*if(argc <= 1) {
         printf("Usage: program [Path to .obj]\n");
         return 0;
-    }
+    }*/
     Application app;
     app.init();
-    app.load(argv[1]);
+    std::string name = "";
+    for(int i = 1; i < argc; ++i) {
+        if(strcmp(argv[i], "-name") == 0) {
+            name = argv[i + 1];
+            i++;
+            continue;
+        }
+        app.load(name, argv[i]);
+    }
     app.main_loop();
 }

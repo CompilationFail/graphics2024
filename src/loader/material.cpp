@@ -7,7 +7,9 @@ Material::Material() : Ns(7),
                        Ks(1, 1, 1),
                        Ke(0, 0, 0),
                        illum(1),
-                       texture_scale(1, 1, 1) { }
+                       texture_scale(1, 1, 1),
+                       texture_normal_scale(1, 1, 1) 
+                       { }
 void Material::verify() {
     Ns = std::clamp(Ns, 0.f, 1000.f);
     Ka = clamp_color(Ka);
@@ -97,6 +99,26 @@ int MaterialLib::load(const Path &path) {
                 texture_path /= Path(unescape(pos));
                 try {
                     cur -> texture = std::make_unique <Texture2D> (texture_path);
+                } catch(std::string err) {
+                    warn(2, "[ERROR] Fail to load texture2D: %s", err.c_str());
+                }
+            } else if(str_equal(pos, "map_normal")) {
+                pos += 11;
+                while(*pos && *pos == ' ') pos++;
+                if(str_equal(pos, "-s")) {
+                    pos += 2;
+                    while(*pos && *pos == ' ') pos++;
+                    if(readvec3(pos, &cur -> texture_normal_scale, "Map-normal")) {
+                        for(int i = 0; i < 3; ++i) {
+                            pos = strstr(pos, " ");
+                            while(*pos && *pos == ' ') pos++;
+                        }
+                    }
+                }
+                Path texture_path = path.parent_path();
+                texture_path /= Path(unescape(pos));
+                try {
+                    cur -> texture_normal = std::make_unique <Texture2D> (texture_path);
                 } catch(std::string err) {
                     warn(2, "[ERROR] Fail to load texture2D: %s", err.c_str());
                 }

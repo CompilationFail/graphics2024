@@ -28,11 +28,15 @@ void Texture2D::init(uint8_t *data,
                      GLenum format) {
   _width = width;
   _height = height;
+  /*for(int i = 0; i < 1000; ++i) {
+    printf("%d %d %d\n", data[i * 3 + 0], data[i * 3 + 1], data[i * 3 + 2]);
+  }*/
 
   glGenTextures(1, &_tex_id);
   if(_tex_id == 0) {
     warn(2, "[ERROR] Fail to generate texture2D");
   }
+  glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, _tex_id);
   CheckGLError();
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);

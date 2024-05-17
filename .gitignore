@@ -1,5 +1,6 @@
 /build
 /.cache
 /*.exe
+/imgui.ini
 **.DS_Store
 interaction_guide.md

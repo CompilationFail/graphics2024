@@ -121,10 +121,13 @@ in vec3 o_pos;
 in vec3 o_norm;
 
 uniform sampler2D tex;
+uniform sampler2D tex_norm;
 uniform vec3 m_ka;
 uniform vec3 m_kd;
 uniform vec3 tex_scale;
-uniform int m_type;
+uniform vec3 tex_norm_scale;
+uniform int has_tex;
+uniform int has_tex_norm;
 uniform vec3 camera;
 struct LightSource {
     vec3 position;
@@ -136,16 +139,20 @@ layout(location = 0) out vec4 frag_color;
 
 
 void main() {
-    vec3 color;
-    if(m_type == 1) {
+    vec3 color = m_kd;
+    if(has_tex == 1) {
         color = vec3(texture(tex, vec2(o_uv.x / tex_scale.x, o_uv.y / tex_scale.y)));
-    } else {
-        color = m_kd;
     }
-    // frag_color = vec4(color,1);
-    // frag_color = vec4(vec3(0.5,0.5,0.5)+o_norm/2,1);
+    vec3 norm = o_norm;
+    if(has_tex_norm == 1) {
+        norm = vec3(texture(tex_norm, vec2(o_uv.x / tex_norm_scale.x, o_uv.y / tex_norm_scale.y)));
+        norm = norm * 2 - vec3(1,1,1);
+    }
+    norm = normalize(norm);
+    // frag_color = vec4(norm, 1);
+    frag_color = vec4(vec3(0.5,0.5,0.5)+norm/2,1);
     // frag_color = vec4(o_pos / 5 + vec3(0.5,0.5,0.5), 1);
-    // return;
+    return;
     vec3 i = light.position - o_pos;
     float r = dot(i, i);
     i = normalize(i);
@@ -155,9 +162,9 @@ void main() {
     // frag_color = vec4(dot(i,i), 0, 0, 0);
     // return;
     vec3 h = normalize((i + v) / 2);
-    float theta = dot(i, o_norm);
+    float theta = dot(i, norm);
 
-    /*if(dot(o_norm, v) < 0) {
+    /*if(dot(norm, v) < 0) {
         frag_color = vec4(0, 0, 0, 0);
         return;
     }*/
@@ -165,7 +172,7 @@ void main() {
     vec3 intense = light.intense / r;
     vec3 diffuse = color * intense * max(0, theta);
 
-    float alpha = dot(o_norm, h);
+    float alpha = dot(norm, h);
     
     vec3 specular = color * intense * pow(max(0, alpha), 200);
     if(alpha < 0) {
@@ -187,32 +194,50 @@ PhongShader::PhongShader() : Shader(Phong::vertex_shader_text, Phong::fragment_s
     trans = loc("transform");
     Ka = loc("m_ka");
     Kd = loc("m_kd");
-    type = loc("m_type");
+    has_tex = loc("has_tex");
+    has_tex_norm = loc("has_tex_norm");
     scale = loc("tex_scale");
+    norm_scale = loc("norm_tex_scale");
     camera = loc("camera");
     light = loc("light.position");
-    // printf("trans: %d Ka:%d Kd:%d type:%d scale:%d camera:%d light:%d\n", trans, Ka, Kd, type, scale, camera, light);
+    tex = loc("tex");
+    tex_norm = loc("tex_norm");
+    printf("trans: %d Ka:%d Kd:%d has_tex:%d has_tex_norm:%d scale:%d camera:%d light:%d tex:%d tex_norm:%d\n", trans, Ka, Kd, has_tex, has_tex_norm, scale, camera, light, tex, tex_norm);
 }
 void PhongShader::set_transform(glm::mat4 transform) {
     glUniformMatrix4fv(trans, 1, false, (GLfloat *)&transform);
 }
 void PhongShader::set_material(Material *material) {
+    glUniform1i(tex, 0);
+    glUniform1i(tex_norm, 1);
     if(material == nullptr) {
         glUniform3f(Ka, 0, 0, 0);
         CheckGLError();
         glUniform3f(Kd, 0, 0, 0);
         CheckGLError();
-        glUniform1i(type, 0);
+        glUniform1i(has_tex, 0);
         CheckGLError();
     } else {
         if(material->texture != nullptr) {
             CheckGLError();
+            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, material->texture->get());
             CheckGLError();
-            glUniform1i(type, 1);
+            glUniform1i(has_tex, 1);
             CheckGLError();
         } else {
-            glUniform1i(type, 0);
+            glUniform1i(has_tex, 0);
+            CheckGLError();
+        }
+        if(material->texture_normal != nullptr) {
+            CheckGLError();
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, material->texture_normal->get());
+            CheckGLError();
+            glUniform1i(has_tex_norm, 1);
+            CheckGLError();
+        } else {
+            glUniform1i(has_tex_norm, 0);
             CheckGLError();
         }
         glUniform3f(Ka, material->Ka.x, material->Ka.y, material->Ka.z);
@@ -220,6 +245,8 @@ void PhongShader::set_material(Material *material) {
         glUniform3f(Kd, material->Kd.x, material->Kd.y, material->Kd.z);
         CheckGLError();
         glUniform3f(scale, material->texture_scale.x, material->texture_scale.y, material->texture_scale.z);
+        CheckGLError();
+        glUniform3f(norm_scale, material->texture_normal_scale.x, material->texture_normal_scale.y, material->texture_normal_scale.z);
         CheckGLError();
     }
 }

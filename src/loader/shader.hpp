@@ -37,7 +37,7 @@ public:
 
 class PhongShader: public Shader {
     // const GLint trans = 0, Ka = 1, Kd = 2, scale = 3, type = 4, camera = 5, light = 6;
-    GLint trans, Ka, Kd, scale, type, camera, light;
+    GLint trans, Ka, Kd, scale, norm_scale, has_tex, has_tex_norm, camera, light, tex, tex_norm;
 public:
     PhongShader();
     void set_transform(glm::mat4);

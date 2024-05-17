@@ -225,7 +225,7 @@ void Mesh::draw(const glm::mat4 &trans, const glm::vec3 &camera, const LightSour
     shader->set_transform(trans);
     for(const auto &object: objects) {
         shader->set_material(object.material());
-        printf("%s %p\n", object.c_name(), object.material());
+        // printf("%s %p\n", object.c_name(), object.material());
         object.draw();
     }
 }

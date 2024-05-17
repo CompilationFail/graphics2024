@@ -9,7 +9,9 @@ class Scene {
     std::map <std::string, glm::mat4> _model;
     std::vector <std::pair <std::string, std::unique_ptr<Mesh>>> meshes;
 public:
-    template <class ... T> void load_mesh(std::string name, T ...);
+    template <class ... T> void load_mesh(std::string name, T ... args) {
+        meshes.emplace_back(name, std::make_unique <Mesh> (args ...));
+    }
     void init_draw();
     std::map <std::string, glm::mat4> &model();
     void render(glm::mat4 vp, glm::vec3 camera, LightSource light);

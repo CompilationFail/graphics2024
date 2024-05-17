@@ -26,6 +26,8 @@ struct Material {
     */
     std::unique_ptr <Texture2D> texture;
     glm::vec3 texture_scale;
+    std::unique_ptr <Texture2D> texture_normal;
+    glm::vec3 texture_normal_scale;
     // only support kd texture now
     Material();
     void verify();
