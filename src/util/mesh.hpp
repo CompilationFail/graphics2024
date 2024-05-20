@@ -80,7 +80,10 @@ public:
      */
     Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 color);
     void init_draw();
-    void draw(const glm::mat4& mvp, const glm::vec3 &camera, const LightSource &light) const;
+    void draw(glm::mat4 trans, glm::vec3 camera, glm::vec3 light_position,
+              glm::vec3 light_intense, GLuint depth_buffer,
+              glm::mat4 light_vp) const;
+    void draw_depth() const;
     Bound bound();
     void apply_transform(glm::mat4);
 };

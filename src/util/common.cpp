@@ -91,3 +91,7 @@ void _CheckGLError(const char* file, int line)
 
     return;
 }
+
+void uniform_vec3(GLint loc, glm::vec3 vec) {
+    glUniform3f(loc, vec.x, vec.y, vec.z);
+}

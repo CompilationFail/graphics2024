@@ -1,19 +1,24 @@
-#include "loader/common.hpp"
-
+#include "util/camera.hpp"
+#include "util/common.hpp"
+#include "util/shader.hpp"
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
-#include "loader/shader.hpp"
 
 float debug_x, debug_y, debug_z;
 /*float particle_size = 1.5;
 float rot_speed = 1;
 int particle_number = 4e4; */
-LightSource light;
+glm::vec3 light_intense;
+
+/*glm::vec3 rotate(glm::vec3 d, glm::vec3 axis, float angle) {
+    return glm::rotate(glm::mat4(1.f), angle, axis) * glm::vec4(d, 1);
+}*/
+
+Camera camera, light;
 
 namespace Control {
 
-const glm::vec3 worldUp(0,1,0);
 
 bool enable_mouse_control = 1;
 const float stride = 1;
@@ -21,8 +26,7 @@ float speed = 1;
 float mouse_sensitivity = 1;
 bool ui_window = 0;
 
-float pitch, yaw = -PI/2;
-glm::vec3 camera(0.f, 0.5f, 3.f);
+Camera *camera;
 int key_WASD[4];
 
 double l_xpos, l_ypos;
@@ -32,31 +36,6 @@ const double angle_stride = 0.002;
 int mouse_state;
 float fps = 0;
 
-glm::vec3 dir() {
-    glm::vec3 direction;
-    direction.x = cos(yaw) * cos(pitch);
-    direction.y = sin(pitch);
-    direction.z = sin(yaw) * cos(pitch);
-    direction = glm::normalize(direction);
-    return direction;
-}
-glm::vec3 right() {
-    return glm::normalize(glm::cross(dir(), worldUp));
-}
-glm::vec3 up() {
-    return glm::cross(right(), dir());
-}
-
-glm::vec3 dir4(int d) {
-    if(d == 0) return dir();
-    if(d == 2) return -dir();
-    if(d == 1) return -right();
-    if(d == 3) return right();
-    assert(0);
-}
-glm::vec3 rotate(glm::vec3 d, glm::vec3 axis, float angle) {
-    return glm::rotate(glm::mat4(1.f), angle, axis) * glm::vec4(d, 1);
-}
 
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -71,6 +50,13 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     if (key == GLFW_KEY_S) key_WASD[2] = action;
     if (key == GLFW_KEY_D) key_WASD[3] = action;
     if (key == GLFW_KEY_U && action == GLFW_PRESS) ui_window ^= 1;
+    if (key == GLFW_KEY_L && action == GLFW_PRESS) {
+        if(camera == &::camera) {
+            camera = &light;
+        } else {
+            camera = &::camera;
+        }
+    }
     if (key == GLFW_KEY_M && action == GLFW_PRESS) {
         enable_mouse_control ^= 1;
         if (enable_mouse_control) {
@@ -92,8 +78,10 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
             double dx = (xpos - l_xpos) * angle_stride * mouse_sensitivity;
             double dy = (ypos - l_ypos) * angle_stride * mouse_sensitivity;
 
-            pitch -= dy;
-            yaw += dx;
+            if(camera) {
+                camera -> pitch -= dy;
+                camera -> yaw += dx;
+            }
         }
         l_xpos = xpos, l_ypos = ypos;
     }
@@ -101,10 +89,11 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 
 
 void update(double now) {
+    if(!camera) return;
     for (int i = 0; i < 4; ++i)
     {
         if (key_WASD[i])
-            camera += dir4(i) * stride * float(now - last_time) * speed;
+            camera -> position += camera -> dir4(i) * stride * float(now - last_time) * speed;
     }
     last_time = now;
 }
@@ -135,9 +124,9 @@ void ui() {
         ImGui::SliderFloat("l_pos.x:", &light.position.x, -100, 100);
         ImGui::SliderFloat("l_pos.y:", &light.position.y, -100, 100);
         ImGui::SliderFloat("l_pos.z:", &light.position.z, -100, 100);
-        ImGui::SliderFloat("intense.x:", &light.intense.x, 0, 200);
-        ImGui::SliderFloat("intense.y:", &light.intense.y, 0, 200);
-        ImGui::SliderFloat("intense.z:", &light.intense.z, 0, 200);
+        ImGui::SliderFloat("intense.x:", &light_intense.x, 0, 200);
+        ImGui::SliderFloat("intense.y:", &light_intense.y, 0, 200);
+        ImGui::SliderFloat("intense.z:", &light_intense.z, 0, 200);
         /*ImGui::Text("Debug parameters");
         ImGui::SliderFloat("x:", &debug_x, -100, 100);
         ImGui::SliderFloat("y:", &debug_y, -100, 100);
@@ -184,11 +173,4 @@ void control_update_frame(double now) {
 }
 void render_ui() {
     Control::ui();
-}
-
-glm::mat4 get_view_matrix() {
-    /*
-        TODO: Do we need a lock here?
-    */
-    return glm::lookAt(Control::camera, Control::camera + Control::dir(), Control::up());
 }

@@ -18,7 +18,7 @@ class ParticleShader: public Shader {
 public:
     ParticleShader();
     void set_static(glm::vec3 center, float particle_size);
-    void set_dynamic(glm::mat4 transform, float v_angle, glm::vec3 camera, LightSource light);
+    void set_dynamic(glm::mat4 transform, float v_angle, glm::vec3 camera, glm::vec3 light_position, glm::vec3 light_intense);
 };
 
 class ParticleSystem {
@@ -35,6 +35,6 @@ public:
     ParticleSystem(float particle_size, glm::vec3 center, float radix_lb, float radix_rb);
     ~ParticleSystem();
     void generate(size_t size);
-    void draw(size_t count, glm::mat4 transform, glm::vec3 camera, float v_angle, LightSource light) const;
+    void draw(size_t count, glm::mat4 transform, glm::vec3 camera, float v_angle, glm::vec3 light_position, glm::vec3 light_intense) const;
     void set_particle_size(float size);
 };

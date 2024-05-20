@@ -6,7 +6,7 @@
 #include <vector>
 #include <fstream>
 #include <optional>
-#include "loader/common.hpp"
+#include "util/common.hpp"
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -68,10 +68,10 @@ void imgui_init() {
     ImGui::StyleColorsLight();
 }
 
-glm::vec3 dir4(float pitch, float yaw, int dir) {
+/*glm::vec3 dir4(float pitch, float yaw, int dir) {
     // dir 0 ~ 3, WASD 
     auto y = yaw;
     auto vec = glm::rotate(
         glm::rotate(glm::mat4(1.f), pitch, glm::vec3(1,0,0)), -yaw + dir * PI / 2, glm::vec3(0,1,0)) * glm::vec4(0,0,-1,1);
     return vec.xyz();
-}
+}*/

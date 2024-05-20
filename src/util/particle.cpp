@@ -81,16 +81,16 @@ void ParticleShader::set_static(glm::vec3 center, float particle_size) {
     glUniform3f(_center, center.x, center.y, center.z);
     glUniform1f(_particle_size, particle_size);
 }
-void ParticleShader::set_dynamic(glm::mat4 transform, float v_angle, glm::vec3 camera, LightSource l) {
+void ParticleShader::set_dynamic(glm::mat4 transform, float v_angle, glm::vec3 camera, glm::vec3 light_position, glm::vec3 light_intense) {
     glUniformMatrix4fv(_transform, 1, false, (GLfloat*)&transform);
     CheckGLError();
     glUniform1f(_v_angle, v_angle);
     CheckGLError();
-    glUniform3f(_camera, camera.x, camera.y, camera.z);
+    uniform_vec3(_camera, camera);
     CheckGLError();
-    glUniform3f(_light, l.position.x, l.position.y, l.position.z);
+    uniform_vec3(_light, light_position);
     CheckGLError();
-    glUniform3f(_light + 1, l.intense.x, l.intense.y, l.intense.z);
+    uniform_vec3(_light + 1, light_intense);
     CheckGLError();
 }
 
@@ -209,7 +209,7 @@ ParticleSystem::~ParticleSystem() {
     if(vbo) glDeleteBuffers(1, &vbo);
 }
 
-void ParticleSystem::draw(size_t count, glm::mat4 transform, glm::vec3 camera, float v_angle, LightSource light) const {
+void ParticleSystem::draw(size_t count, glm::mat4 transform, glm::vec3 camera, float v_angle, glm::vec3 light_position, glm::vec3 light_intense) const {
     if(!vao) {
         throw "Particles are not generated";
     }
@@ -219,7 +219,7 @@ void ParticleSystem::draw(size_t count, glm::mat4 transform, glm::vec3 camera, f
     glBindVertexArray(vao);
     shader->use();
     shader->set_static(center, particle_size);
-    shader->set_dynamic(transform, v_angle, camera, light);
+    shader->set_dynamic(transform, v_angle, camera, light_position, light_intense);
     glDrawElements(GL_TRIANGLES, (GLsizei)count * 12, GL_UNSIGNED_INT, nullptr);
 }
 void ParticleSystem::set_particle_size(float size) {

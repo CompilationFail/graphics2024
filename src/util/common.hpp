@@ -49,6 +49,8 @@ static std::vector<char> readFile(const char *filename) {
     return buffer;
 }
 
+void uniform_vec3(GLint loc, glm::vec3 vec);
+
 void _CheckGLError(const char* file, int line);
 
 #define CheckGLError() _CheckGLError(__FILE__, __LINE__)

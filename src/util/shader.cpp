@@ -247,23 +247,58 @@ void PhongShader::set_material(Material *material) {
             glUniform1i(has_tex_norm, 0);
             CheckGLError();
         }
-        glUniform3f(Ka, material->Ka.x, material->Ka.y, material->Ka.z);
+        uniform_vec3(Ka, material->Ka);
         CheckGLError();
-        glUniform3f(Kd, material->Kd.x, material->Kd.y, material->Kd.z);
+        uniform_vec3(Kd, material->Kd);
         CheckGLError();
-        glUniform3f(scale, material->texture_scale.x, material->texture_scale.y, material->texture_scale.z);
+        uniform_vec3(scale, material->texture_scale);
         CheckGLError();
-        glUniform3f(norm_scale, material->texture_normal_scale.x, material->texture_normal_scale.y, material->texture_normal_scale.z);
+        uniform_vec3(norm_scale, material->texture_normal_scale);
         CheckGLError();
     }
 }
-void PhongShader::set_light(LightSource l) {
-    glUniform3f(light_position, l.position.x, l.position.y, l.position.z);
+void PhongShader::set_light(glm::vec3 position, glm::vec3 intense) {
+    uniform_vec3(light_position, position);
     CheckGLError();
-    glUniform3f(light_intense, l.intense.x, l.intense.y, l.intense.z);
+    uniform_vec3(light_intense, intense);
     CheckGLError();
 }
 void PhongShader::set_camera(glm::vec3 cam) {
-    glUniform3f(camera, cam.x, cam.y, cam.z);
+    uniform_vec3(camera, cam);
     CheckGLError();
 }
+
+namespace Depth {
+
+static const char *vertex_shader_text = R"(
+#version 330 core
+// #extension GL_ARB_explicit_uniform_location : enable
+
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec2 uv;
+layout(location = 2) in vec3 normal;
+
+uniform mat4 transform;
+
+void main() {
+    gl_Position = transform * vec4(position, 1.);
+}
+)";
+
+static const char *fragment_shader_text = R"(
+#version 330 core
+// #extension GL_ARB_explicit_uniform_location : enable
+
+void main() {
+}
+)";
+
+}
+
+DepthShader::DepthShader(): Shader(Depth::vertex_shader_text, Depth::fragment_shader_text) {
+    trans = loc("transform");
+}
+void DepthShader::set_transform(glm::mat4 transform) {
+    glUniformMatrix4fv(trans, 1, false, (GLfloat *)&transform);
+}
+

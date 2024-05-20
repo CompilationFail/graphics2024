@@ -6,13 +6,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
-#include "util.cpp"
+#include "init.cpp"
 #include "control.cpp"
 #include <optional>
-#include "loader/loader.hpp"
-#include "loader/bound.hpp"
-#include "loader/particle.hpp"
-#include "loader/scene.hpp"
+#include "util/mesh.hpp"
+#include "util/bound.hpp"
+// #include "util/particle.hpp"
+#include "util/scene.hpp"
 
 static const int width = 1200, height = 800;
 
@@ -47,12 +47,16 @@ public:
         printf("Terminated..");
     }
     void init() {
+        camera.position = glm::vec3(0.f,0.5f, 3.f);
+        camera.pitch = 0;
+        camera.yaw = -PI/2;
         light.position = glm::vec3(1.65, 1.24, -2.1);
-        light.intense = glm::vec3(10, 10, 10);
+        light_intense = glm::vec3(10, 10, 10);
         window = window_init(width, height, "Ground and indoor planet");
         glew_init();
         model = glm::mat4(1.f);
         init_control(window);
+        Control::camera = &camera;
         scene = std::make_unique<Scene>();
         printf("Application initiated.\n");
     }
@@ -105,7 +109,7 @@ public:
             glEnable(GL_DEPTH_TEST);
             glDepthFunc(GL_LESS);
             // printf("%f %f\n", pitch, yaw);
-            auto vp = projection() * get_view_matrix();
+            auto vp = projection() * camera.view();
             /* {
                 glm::vec4 p = mvp * glm::vec4(0.5,0.5,-1,1);
                 auto q = p.xyz() / p.w;
@@ -120,7 +124,8 @@ public:
             // mesh->draw(vp * glm::rotate(glm::mat4(1.f), float(now / 50 * rot_speed), glm::vec3(0, 1, 0)), Control::camera, light);
             /*ground->draw(vp, Control::camera, light);
             mesh->draw(vp, Control::camera, light);*/
-            scene->render(vp, Control::camera, light);
+            scene->update_light(light, light_intense);
+            scene->render(vp, camera.position);
 
             // ps->set_particle_size(2e-3 * particle_size);
             // ps->draw(particle_number, vp, Control::camera, now / 100 * rot_speed, light);

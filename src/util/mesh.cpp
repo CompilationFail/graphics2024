@@ -1,4 +1,4 @@
-#include "loader.hpp"
+#include "mesh.hpp"
 #include "glm/geometric.hpp"
 #include <stb_image.h>
 
@@ -217,10 +217,10 @@ void Mesh::init_draw() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     CheckGLError();
 }
-void Mesh::draw(const glm::mat4 &trans, const glm::vec3 &camera, const LightSource &light) const {
+void Mesh::draw(glm::mat4 trans, glm::vec3 camera, glm::vec3 light_position, glm::vec3 light_intense, GLuint depth_buffer, glm::mat4 light_vp) const {
     shader -> use();
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    shader->set_light(light);
+    shader->set_light(light_position, light_intense);
     shader->set_camera(camera);
     shader->set_transform(trans);
     for(const auto &object: objects) {
@@ -229,6 +229,12 @@ void Mesh::draw(const glm::mat4 &trans, const glm::vec3 &camera, const LightSour
         object.draw();
     }
 }
+void Mesh::draw_depth() const {
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    for(const auto &object: objects) 
+        object.draw();
+}
+
 
 Mesh::Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 color) {
     Material *material = new Material(); material -> Kd = color;

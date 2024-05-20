@@ -3,7 +3,7 @@ add_executable(main main.cpp)
 
 
 target_compile_features(main PRIVATE cxx_std_17)
-target_link_libraries(main PRIVATE glfw glew_s glm loader imgui ${OPENGL_gl_LIBRARY})
+target_link_libraries(main PRIVATE glfw glew_s glm util imgui ${OPENGL_gl_LIBRARY})
 
 #if (APPLE)
 #    target_link_libraries(main PRIVATE "-framework Cocoa")
@@ -15,4 +15,4 @@ target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/third_party/glew/inc
 
 # target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/third_party/freetype/include)
 
-add_subdirectory(loader)
+add_subdirectory(util)

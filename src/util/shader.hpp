@@ -16,11 +16,11 @@ GLuint link_program(GLuint *, uint32_t);
 GLuint prepare_phong_shader();
 GLuint prepare_shader(const char *vert, const char* frag);
 
-struct LightSource {
+/*struct LightSource {
     glm::vec3 position;
     glm::vec3 intense;
     glm::vec3 color;
-};
+};*/
 
 class Shader {
     GLuint _program;
@@ -42,10 +42,15 @@ public:
     PhongShader();
     void set_transform(glm::mat4 transform);
     void set_material(Material *material);
-    void set_light(LightSource light);
+    void set_light(glm::vec3 light_position, glm::vec3 light_intense);
     void set_camera(glm::vec3 camera);
 };
 
-
+class DepthShader: public Shader {
+    GLint trans;
+public:
+    DepthShader();
+    void set_transform(glm::mat4 transform);
+};
 
 
