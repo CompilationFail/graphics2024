@@ -23,6 +23,7 @@ void Scene::update_light(Camera light_camera, glm::vec3 intense) {
                             1.f * depth_map_width / depth_map_height, .1f, 100.f) *
             light_camera.view();
     }
+    light_position = light_camera.position; 
     light_intense = intense;
 }
 void Scene::render(glm::mat4 vp, glm::vec3 camera) {
@@ -30,10 +31,12 @@ void Scene::render(glm::mat4 vp, glm::vec3 camera) {
         render_depth_buffer(light_vp);
     }
     for(auto &[name, mesh]: meshes) {
-        glm::mat mvp = vp;
-        if(_model.count(name)) 
+        glm::mat mvp = vp, light_mvp = light_vp;
+        if(_model.count(name)) {
             mvp = mvp * _model[name];
-        mesh->draw(mvp, camera, light_position, light_intense, shadow ? depth_map: 0, light_vp);
+            light_mvp = light_mvp * _model[name];
+        }
+        mesh->draw(mvp, camera, light_position, light_intense, shadow ? depth_map: 0, light_mvp);
     }
 }
 void Scene::render_depth_buffer(glm::mat4 vp) {

@@ -15,7 +15,7 @@ glm::vec3 light_intense;
     return glm::rotate(glm::mat4(1.f), angle, axis) * glm::vec4(d, 1);
 }*/
 
-Camera camera, light;
+Camera camera, light, tmp;
 
 namespace Control {
 
@@ -52,9 +52,12 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     if (key == GLFW_KEY_U && action == GLFW_PRESS) ui_window ^= 1;
     if (key == GLFW_KEY_L && action == GLFW_PRESS) {
         if(camera == &::camera) {
+            tmp = ::camera;
+            ::camera = light;
             camera = &light;
         } else {
             camera = &::camera;
+            ::camera = tmp;
         }
     }
     if (key == GLFW_KEY_M && action == GLFW_PRESS) {
@@ -90,6 +93,9 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 
 void update(double now) {
     if(!camera) return;
+    if(camera == &light) {
+        ::camera = light;
+    }
     for (int i = 0; i < 4; ++i)
     {
         if (key_WASD[i])

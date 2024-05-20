@@ -37,13 +37,14 @@ public:
 
 class PhongShader: public Shader {
     // const GLint trans = 0, Ka = 1, Kd = 2, scale = 3, type = 4, camera = 5, light = 6;
-    GLint trans, Ka, Kd, scale, norm_scale, has_tex, has_tex_norm, camera, light_position, light_intense, tex, tex_norm;
+    GLint trans, Ka, Kd, scale, norm_scale, has_tex, has_tex_norm, camera, light_position, light_intense, light_transform, depth_map, tex, tex_norm;
 public:
     PhongShader();
     void set_transform(glm::mat4 transform);
     void set_material(Material *material);
     void set_light(glm::vec3 light_position, glm::vec3 light_intense);
     void set_camera(glm::vec3 camera);
+    void set_depth(GLuint depth_map, glm::mat4 light_transform);
 };
 
 class DepthShader: public Shader {

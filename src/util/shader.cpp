@@ -129,11 +129,12 @@ uniform vec3 tex_norm_scale;
 uniform int has_tex;
 uniform int has_tex_norm;
 uniform vec3 camera;
-struct LightSource {
-    vec3 position;
-    vec3 intense;
-};
-uniform LightSource light;
+
+uniform vec3 light_position;
+uniform vec3 light_intense;
+uniform mat4 light_transform;
+uniform sampler2D depth_map;
+
 
 layout(location = 0) out vec4 frag_color;
 
@@ -159,7 +160,7 @@ void main() {
     // frag_color = vec4(vec3(0.5,0.5,0.5)+norm/2,1);
     // frag_color = vec4(o_pos / 5 + vec3(0.5,0.5,0.5), 1);
     // return;
-    vec3 i = light.position - o_pos;
+    vec3 i = light_position - o_pos;
     float r = dot(i, i);
     i = normalize(i);
     vec3 v = normalize(camera - o_pos);
@@ -175,7 +176,7 @@ void main() {
         return;
     }*/
 
-    vec3 intense = light.intense / r;
+    vec3 intense = light_intense / r;
     vec3 diffuse = color * intense * max(0, theta);
 
     float alpha = dot(norm, h);
@@ -185,7 +186,18 @@ void main() {
         specular = vec3(0,0,0);
     }
 
-    vec3 ambient = color * light.intense * 0.02;
+    vec3 ambient = color * light_intense * 0.02;
+
+    if(depth_map != 0) {
+        vec3 pos = vec3(light_transform * vec4(o_pos, 1));
+        if(pos.x >= 0 && pos.x < 1 && pos.y >= 0 && pos.y < 1) {
+            float depth = float(texture(depth_map, vec2(pos.x,pos.y)));
+            if(depth < pos.z) {
+                diffuse = vec3(0, 0, 0);
+                specular = vec3(0, 0, 0);
+            } 
+        }
+    }
 
     // frag_color = vec4(diffuse, 0);
     frag_color = vec4(diffuse + specular + ambient, 0);
@@ -205,8 +217,10 @@ PhongShader::PhongShader() : Shader(Phong::vertex_shader_text, Phong::fragment_s
     scale = loc("tex_scale");
     norm_scale = loc("tex_norm_scale");
     camera = loc("camera");
-    light_position = loc("light.position");
-    light_intense = loc("light.intense");
+    light_position = loc("light_position");
+    light_intense = loc("light_intense");
+    light_transform = loc("light_transform");
+    depth_map = loc("depth_map");
     tex = loc("tex");
     tex_norm = loc("tex_norm");
     printf("trans: %d Ka:%d Kd:%d has_tex:%d has_tex_norm:%d scale:%d camera:%d light:%d,%d tex:%d tex_norm:%d\n", trans, Ka, Kd, has_tex, has_tex_norm, scale, camera, light_position, light_intense, tex, tex_norm);
@@ -266,6 +280,13 @@ void PhongShader::set_light(glm::vec3 position, glm::vec3 intense) {
 void PhongShader::set_camera(glm::vec3 cam) {
     uniform_vec3(camera, cam);
     CheckGLError();
+}
+void PhongShader::set_depth(GLuint buffer, glm::mat4 transform) {
+    glUniform1i(depth_map, 2);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, buffer);
+
+    glUniformMatrix4fv(light_transform, 1, false, (GLfloat *)&transform);
 }
 
 namespace Depth {

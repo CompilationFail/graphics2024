@@ -50,6 +50,8 @@ public:
         camera.position = glm::vec3(0.f,0.5f, 3.f);
         camera.pitch = 0;
         camera.yaw = -PI/2;
+        light.pitch = -PI/2;
+        light.yaw = PI * 0.6;
         light.position = glm::vec3(1.65, 1.24, -2.1);
         light_intense = glm::vec3(10, 10, 10);
         window = window_init(width, height, "Ground and indoor planet");
@@ -76,7 +78,8 @@ public:
         } catch(const char *e) {
             printf("%s\n", e);
         }
-        printf("Particle system generated.\n");*/
+        printf("Particle system generated.\n");
+        */
     }
     glm::mat4 projection() {
         return glm::perspective(45.f, 1.f * width / height, .1f, 100.f);
