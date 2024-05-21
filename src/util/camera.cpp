@@ -23,9 +23,6 @@ glm::vec3 Camera::dir4(int d) {
     assert(0);
 }
 glm::mat4 Camera::view() {
-    /*
-        TODO: Do we need a lock here?
-    */
     return glm::lookAt(position, position + dir(), up());
 }
 

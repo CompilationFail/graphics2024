@@ -9,10 +9,10 @@
 class Scene {
     std::map <std::string, glm::mat4> _model;
     std::vector <std::pair <std::string, std::unique_ptr<Mesh>>> meshes;
-    GLuint depth_map;
+    GLuint depth_buffer, depth_map;
     int shadow, depth_map_width, depth_map_height; float depth_map_fov;
     std::unique_ptr <DepthShader> depth_shader;
-    glm::mat4 light_vp; glm::vec3 light_position, light_intense;
+    glm::mat4 light_vp; glm::vec3 light_position, light_intense, light_direction;
     void render_depth_buffer(glm::mat4 transform);
 public:
     Scene();
@@ -21,8 +21,8 @@ public:
     }
     void init_draw();
     void update_light(Camera light, glm::vec3 intense);
-    void activate_shadow(int width = 1000, int height = 1000, float fov = 45.);
+    void activate_shadow(int width = 1000, int height = 1000, float fov = glm::radians(45.f));
     std::map <std::string, glm::mat4> &model();
-    void render(glm::mat4 vp, glm::vec3 camera);
+    void render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera);
 };
 

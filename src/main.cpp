@@ -14,7 +14,7 @@
 // #include "util/particle.hpp"
 #include "util/scene.hpp"
 
-static const int width = 1200, height = 800;
+static const int width = 1000, height = 1000;
 
 /*
 
@@ -47,12 +47,12 @@ public:
         printf("Terminated..");
     }
     void init() {
-        camera.position = glm::vec3(0.f,0.5f, 3.f);
-        camera.pitch = 0;
+        camera.position = glm::vec3(0.f,1.5f, 3.f);
+        camera.pitch = glm::radians(-35.f);
         camera.yaw = -PI/2;
-        light.pitch = -PI/2;
+        light.pitch = -PI/3;
         light.yaw = PI * 0.6;
-        light.position = glm::vec3(1.65, 1.24, -2.1);
+        light.position = glm::vec3(1.65, 3, -2.1);
         light_intense = glm::vec3(10, 10, 10);
         window = window_init(width, height, "Ground and indoor planet");
         glew_init();
@@ -82,7 +82,7 @@ public:
         */
     }
     glm::mat4 projection() {
-        return glm::perspective(45.f, 1.f * width / height, .1f, 100.f);
+        return glm::perspective(glm::radians(45.f), 1.f * width / height, .1f, 100.f);
     }
     /*glm::mat4 view() {
         return glm::rotate(glm::mat4(1.f), -pitch, glm::vec3(1, 0, 0)) *
@@ -91,8 +91,9 @@ public:
     }*/
     void main_loop() {
         puts("init draw");
-        scene -> init_draw();
-        scene -> model()["plant"] = glm::translate(glm::mat4(1.f), glm::vec3(0, -1, 0));
+        scene->init_draw();
+        scene->model()["plant"] = glm::translate(glm::mat4(1.f), glm::vec3(0, -1, 0));
+        scene->activate_shadow();
         puts("Enter main loop");
         auto last = glfwGetTime();
         int frame_count = 0;
@@ -101,16 +102,6 @@ public:
             control_update_frame(now);
             // printf("Frame: %d\n", ++frame_count);
 
-            glfwPollEvents();
-            glfwSwapBuffers(window);
-
-            int width, height;
-            glfwGetFramebufferSize(window, &width, &height);
-            glViewport(0, 0, width, height);
-            glClearColor(0., 0., 0., 1.);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glEnable(GL_DEPTH_TEST);
-            glDepthFunc(GL_LESS);
             // printf("%f %f\n", pitch, yaw);
             auto vp = projection() * camera.view();
             /* {
@@ -128,7 +119,7 @@ public:
             /*ground->draw(vp, Control::camera, light);
             mesh->draw(vp, Control::camera, light);*/
             scene->update_light(light, light_intense);
-            scene->render(vp, camera.position);
+            scene->render(window, vp, camera.position);
 
             // ps->set_particle_size(2e-3 * particle_size);
             // ps->draw(particle_number, vp, Control::camera, now / 100 * rot_speed, light);
