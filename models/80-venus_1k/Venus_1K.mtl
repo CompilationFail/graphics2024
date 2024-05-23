@@ -4,22 +4,28 @@
 newmtl Atmosphere
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
-Kd 0.640000 0.640000 0.640000
+Kd 1.00000 0.640000 0.640000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
-map_Kd Textures/Atmosphere_2K.png
+ao 0.1
+roughness 0.1
+metallic 1
+// map_Kd Textures/Atmosphere_2K.png
 illum 2
 
 newmtl Venus
 Ns 96.078431
 Ka 1.000000 1.000000 1.000000
-Kd 0.640000 0.640000 0.640000
+Kd 1.00000 0.640000 0.640000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
-map_Kd Textures/Diffuse_1K.png
+ao 0.1
+roughness 0.1
+metallic 0
+// map_Kd Textures/Diffuse_1K.png
 map_Bump Textures/Bump_1K.png
 illum 2

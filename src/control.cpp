@@ -5,6 +5,9 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+float roughness = 0.3;
+float metallic = 0.6;
+
 float debug_x, debug_y, debug_z;
 /*float particle_size = 1.5;
 float rot_speed = 1;
@@ -133,9 +136,12 @@ void ui() {
         ImGui::SliderFloat("intense.x:", &light_intense.x, 0, 200);
         ImGui::SliderFloat("intense.y:", &light_intense.y, 0, 200);
         ImGui::SliderFloat("intense.z:", &light_intense.z, 0, 200);
+        ImGui::Text("Ground Material");
+        ImGui::SliderFloat("roughness:", &roughness, 0, 1);
+        ImGui::SliderFloat("metallic:", &metallic, 0, 1);
         /*ImGui::Text("Debug parameters");
-        ImGui::SliderFloat("x:", &debug_x, -100, 100);
-        ImGui::SliderFloat("y:", &debug_y, -100, 100);
+        ImGui::SliderFloat("x:", &debug_x, 0, 1);
+        ImGui::SliderFloat("y:", &debug_y, 0, 1);
         ImGui::SliderFloat("z:", &debug_z, -100, 100);*/
         ImGui::End();
     }

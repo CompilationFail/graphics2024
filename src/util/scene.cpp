@@ -67,12 +67,7 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
     glDepthFunc(GL_LESS);
     CheckGLError();
     for(auto &[name, mesh]: meshes) {
-        glm::mat mvp = vp, light_mvp = light_vp;
-        if(_model.count(name)) {
-            mvp = mvp * _model[name];
-            light_mvp = light_mvp * _model[name];
-        }
-        mesh->draw(mvp, camera, light_position, light_intense, light_direction, shadow ? depth_map: 0, light_mvp);
+        mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_position, light_intense, light_direction, shadow ? depth_map: 0, light_vp);
     }
 }
 void Scene::render_depth_buffer(glm::mat4 vp) {

@@ -55,13 +55,14 @@ public:
 };
 
 class Mesh { 
+public:
     std::vector <Vertex> vertices;
     std::vector <Object> objects;
     std::unique_ptr <MaterialLib> mtl;
     std::map <VertexIndices, uint32_t> mp;
     GLuint vertex_buffer;
-    std::unique_ptr <PhongShader> shader;
-public:
+    std::unique_ptr <PBRShader> shader;
+    // std::unique_ptr <PhongShader> shader;
     Mesh() { }
     ~Mesh() {
         if(vertex_buffer) {
@@ -80,9 +81,9 @@ public:
      */
     Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 color);
     void init_draw();
-    void draw(glm::mat4 trans, glm::vec3 camera, glm::vec3 light_position,
+    void draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera, glm::vec3 light_position,
               glm::vec3 light_intense, glm::vec3 light_direction, GLuint depth_map,
-              glm::mat4 light_transform) const;
+              glm::mat4 light_vp) const;
     void draw_depth() const;
     Bound bound();
     void apply_transform(glm::mat4);

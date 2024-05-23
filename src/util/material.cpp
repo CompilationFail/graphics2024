@@ -8,14 +8,18 @@ Material::Material() : Ns(7),
                        Ke(0, 0, 0),
                        illum(1),
                        texture_scale(1, 1, 1),
-                       texture_normal_scale(1, 1, 1) 
-                       { }
+                       texture_normal_scale(1, 1, 1),
+                       metallic(0.5),
+                       roughness(0.5), ao(0.1) { }
+
 void Material::verify() {
     Ns = std::clamp(Ns, 0.f, 1000.f);
     Ka = clamp_color(Ka);
     Kd = clamp_color(Kd);
     Ks = clamp_color(Ks);
     Ke = clamp_color(Ke);
+    metallic = std::clamp(metallic, 0.f, 1.f);
+    roughness = std::clamp(roughness, 0.f, 1.f);
     if (illum != std::clamp(illum, 0u, 10u))
     {
         warn(1, "Unsupported illum: (%d), fallback to illum 0", illum);
@@ -70,6 +74,18 @@ int MaterialLib::load(const Path &path) {
         } else if(str_equal(pos, "Ns ")) {
             if(sscanf(pos + 3, "%f", &cur -> Ns) != 1) {
                 warn(1, "Ns: Expected 1 float, found: %s", pos + 3);
+            }
+        } else if(str_equal(pos, "metallic ")) {
+            if(sscanf(pos + 9, "%f", &cur -> metallic) != 1) {
+                warn(1, "metallic: Expected 1 float, found: %s", pos + 3);
+            }
+        } else if(str_equal(pos, "roughness")) {
+            if(sscanf(pos + 10, "%f", &cur -> roughness) != 1) {
+                warn(1, "roughness: Expected 1 float, found: %s", pos + 3);
+            }
+        } else if(str_equal(pos, "ao")) {
+            if(sscanf(pos + 3, "%f", &cur -> ao) != 1) {
+                warn(1, "ao: Expected 1 float, found: %s", pos + 3);
             }
         } else if(str_equal(pos, "Ka ")) {
             readvec3(pos + 3, &cur -> Ka, "Ka");

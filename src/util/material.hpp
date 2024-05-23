@@ -11,6 +11,7 @@ struct Material {
     glm::vec3 Ks; // specular color
     glm::vec3 Ke; // emit color
     uint32_t illum; // illumination type
+    float metallic, roughness, ao;
     /*
     0. Color on and Ambient off
     1. Color on and Ambient on
@@ -34,9 +35,9 @@ struct Material {
 };
 
 class MaterialLib {
+public:
     std::vector <Material*> materials;
     std::map <std::string, Material*> pool;
-public:
     ~MaterialLib();
     int load(const Path &path);
     void add(std::string name, Material *material);

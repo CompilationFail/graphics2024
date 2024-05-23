@@ -9,6 +9,9 @@ Ks 0.200000 0.200000 0.200000
 Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 0.000000
+ao 0.1
+roughness 0.4
+metallic 0.8
 illum 2
 map_Kd textures/bpng.jpg
 map_Bump  textures/bpng_NRM Kopie.jpg
@@ -21,8 +24,11 @@ Ka 1.000000 1.000000 1.000000
 Kd 0.253072 0.253072 0.253072
 Ks 0.200000 0.200000 0.200000
 Ke 0.000000 0.000000 0.000000
+ao 0.1
 Ni 1.000000
 d 0.000000
+roughness 0.4
+metallic 0.8
 illum 2
 map_Bump  textures/bpng_NRM Kopie.jpg
 map_Kd  textures/bpng.jpg
@@ -35,8 +41,11 @@ Ka 1.000000 1.000000 1.000000
 Kd 0.640000 0.640000 0.640000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
+ao 0.1
 Ni 1.000000
 d 1.000000
+roughness 0.8
+metallic 0.3
 illum 2
 map_Kd textures/Pot textures_col.jpg
 map_Bump  textures/Pot textures_nor.png

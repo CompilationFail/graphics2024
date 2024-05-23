@@ -98,16 +98,18 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec2 uv;
 layout(location = 2) in vec3 normal;
 
-uniform mat4 transform;
+uniform mat4 model;
+uniform mat4 vp;
 
 out vec2 o_uv;
 out vec3 o_pos;
 out vec3 o_norm;
 
 void main() {
-    gl_Position = transform * vec4(position, 1.);
+    vec4 p = model * vec4(position, 1);
+    gl_Position = vp * p;
+    o_pos = p.xyz / p.w;
     o_uv = uv;
-    o_pos = position;
     o_norm = normal;
 }
 )";
@@ -133,7 +135,7 @@ uniform vec3 camera;
 uniform vec3 light_position;
 uniform vec3 light_intense;
 uniform vec3 light_direction;
-uniform mat4 light_transform;
+uniform mat4 light_vp;
 uniform sampler2D depth_map;
 uniform int has_depth_map;
 
@@ -196,13 +198,8 @@ void main() {
     // ambient = vec3(0,0,0);
 
     if(has_depth_map != 0) {
-        vec4 pos2 = light_transform * vec4(o_pos, 1);
+        vec4 pos2 = light_vp * vec4(o_pos, 1);
         vec3 pos = pos2.xyz / pos2.w * 0.5 + 0.5;
-        /*pos.x = pos.x / 2 + 0.5;
-        pos.y = pos.y / 2 + 0.5;*/
-        // float depth = float(texture(depth_map, vec2(pos.x,pos.y)));
-        // frag_color = vec4(pos.x, pos.y,0, 0);
-        // return;
         if(pos.x >= 0 && pos.x < 1 && pos.y >= 0 && pos.y < 1) {
             float depth = texture(depth_map, vec2(pos.x,pos.y)).r;
             // frag_color = vec4(depth / 3, 0,0, 0);
@@ -226,7 +223,8 @@ void main() {
 }
 
 PhongShader::PhongShader() : Shader(Phong::vertex_shader_text, Phong::fragment_shader_text) {
-    trans = loc("transform");
+    model = loc("model");
+    vp = loc("vp");
     Ka = loc("m_ka");
     Kd = loc("m_kd");
     has_tex = loc("has_tex");
@@ -236,16 +234,17 @@ PhongShader::PhongShader() : Shader(Phong::vertex_shader_text, Phong::fragment_s
     camera = loc("camera");
     light_position = loc("light_position");
     light_intense = loc("light_intense");
-    light_transform = loc("light_transform");
+    light_vp = loc("light_vp");
     light_direction = loc("light_direction");
     depth_map = loc("depth_map");
     tex = loc("tex");
     tex_norm = loc("tex_norm");
     has_depth_map = loc("has_depth_map");
-    printf("trans: %d Ka:%d Kd:%d has_tex:%d has_tex_norm:%d scale:%d camera:%d light:%d,%d tex:%d tex_norm:%d\n", trans, Ka, Kd, has_tex, has_tex_norm, scale, camera, light_position, light_intense, tex, tex_norm);
+    // printf("trans: %d Ka:%d Kd:%d has_tex:%d has_tex_norm:%d scale:%d camera:%d light:%d,%d tex:%d tex_norm:%d\n", vp, Ka, Kd, has_tex, has_tex_norm, scale, camera, light_position, light_intense, tex, tex_norm);
 }
-void PhongShader::set_transform(glm::mat4 transform) {
-    glUniformMatrix4fv(trans, 1, false, (GLfloat *)&transform);
+void PhongShader::set_mvp(glm::mat4 _model, glm::mat4 _vp) {
+    glUniformMatrix4fv(model, 1, false, (GLfloat *)&_model);
+    glUniformMatrix4fv(vp, 1, false, (GLfloat *)&_vp);
 }
 void PhongShader::set_material(Material *material) {
     glUniform1i(tex, 0);
@@ -302,7 +301,7 @@ void PhongShader::set_camera(glm::vec3 cam) {
     uniform_vec3(camera, cam);
     CheckGLError();
 }
-void PhongShader::set_depth(GLuint map, glm::mat4 transform) {
+void PhongShader::set_depth(GLuint map, glm::mat4 vp) {
     if(map == 0) {
         glUniform1i(has_depth_map, 0);
     } else {
@@ -311,7 +310,7 @@ void PhongShader::set_depth(GLuint map, glm::mat4 transform) {
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, map);
 
-        glUniformMatrix4fv(light_transform, 1, false, (GLfloat *)&transform);
+        glUniformMatrix4fv(light_vp, 1, false, (GLfloat *)&vp);
     }
 }
 
@@ -349,3 +348,274 @@ void DepthShader::set_transform(glm::mat4 transform) {
     glUniformMatrix4fv(trans, 1, false, (GLfloat *)&transform);
 }
 
+namespace PBR { 
+static const char *vertex_shader_text = R"(
+#version 330 core
+// #extension GL_ARB_explicit_uniform_location : enable
+
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec2 uv;
+layout(location = 2) in vec3 normal;
+
+uniform mat4 model;
+uniform mat4 vp;
+
+out vec2 o_uv;
+out vec3 o_pos;
+out vec3 o_norm;
+
+void main() {
+    vec4 p = model * vec4(position, 1);
+    gl_Position = vp * p;
+    o_pos = p.xyz / p.w;
+    o_uv = uv;
+    o_norm = normal;
+}
+)";
+
+static const char *fragment_shader_text = R"(
+#version 330 core
+// #extension GL_ARB_explicit_uniform_location : enable
+
+in vec2 o_uv;
+in vec3 o_pos;
+in vec3 o_norm;
+
+uniform mat4 transform;
+uniform sampler2D tex;
+uniform sampler2D tex_norm;
+uniform vec3 tex_scale;
+uniform vec3 tex_norm_scale;
+uniform int has_tex;
+uniform int has_tex_norm;
+uniform vec3 camera;
+
+uniform vec3 light_position;
+uniform vec3 light_intense;
+uniform vec3 light_direction;
+uniform mat4 light_vp;
+uniform sampler2D depth_map;
+uniform int has_depth_map;
+
+float F0; // constant for fresnel term
+
+// material parameters
+uniform vec3  m_albedo;
+uniform float m_metallic;
+uniform float m_roughness;
+uniform float m_ao;
+
+layout(location = 0) out vec4 frag_color;
+
+vec2 scale_uv(vec2 uv, vec3 scale) {
+    return vec2(uv.x / scale.x, uv.y / scale.y);
+}
+
+float PI = 3.14159265;
+
+vec3 fresnel(vec3 v, vec3 h, vec3 F0) {
+    return F0 + (vec3(1.0) - F0) * vec3(pow(clamp(1.0 - dot(v, h), 0.0, 1.0), 5.0));
+}
+float D_GGX(vec3 n, vec3 h, float roughness) {
+    float a      = roughness * roughness;
+    float a2     = a * a;
+    float NdotH  = max(dot(n, h), 0.0);
+    float NdotH2 = NdotH*NdotH;
+    
+    float num   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+    
+    return num / denom;
+}
+
+float G_SchlickGGX(float NdotV, float roughness) {
+    float r = (roughness + 1.0);
+    float k = (r*r) / 8.0;
+
+    float num   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+    
+    return num / denom;
+}
+float G_Smith(vec3 n, vec3 v, vec3 i, float roughness) {
+    return G_SchlickGGX(max(0., dot(n, v)), roughness) * G_SchlickGGX(max(0., dot(n,i)), roughness);
+}
+
+vec3 L(vec3 light_pos, vec3 light_intense, vec3 n, vec3 pos, vec3 albedo, float metallic, float roughness) {
+    vec3 i = light_position - pos;
+    float r = dot(i, i);
+    i = normalize(i);
+    vec3 v = normalize(camera - pos);
+    vec3 h = normalize(i + v);
+
+    float theta = dot(i, n);
+    if(theta <= 0) return vec3(0);
+    
+    if(has_depth_map != 0) {
+        vec4 lpos_w = light_vp * vec4(pos, 1);
+        vec3 lpos = (lpos_w.xyz / lpos_w.w + vec3(1)) / 2;
+        if(lpos.x >= 0 && lpos.x < 1 && lpos.y >= 0 && lpos.y < 1) {
+            float depth = texture(depth_map, lpos.xy).r;
+            if(lpos.z > depth + 1e-3) return vec3(0);
+        }
+    }
+    // cone light
+    if(dot(-light_direction, i) < 0.7) {
+        return vec3(0);
+    }
+    
+    vec3 radiance = light_intense / r;
+
+    vec3 F0 = vec3(0.04); 
+    F0      = mix(F0, albedo, metallic);
+
+    vec3 F =  fresnel(v, h, F0);
+    float D = D_GGX(n, h, roughness);
+    float G = G_Smith(n, v, i, roughness);
+
+    vec3 kD = (vec3(1.0) - F) * (1.0 - metallic);
+    vec3 diffuse = kD * albedo / PI * radiance * theta;
+    
+    vec3 specular = (F * D * G) / (4.0 * max(dot(n, v), 0.0) * max(dot(n, i), 0.0) + 0.0001);
+    specular = specular * radiance * theta;
+
+    return specular + diffuse;
+}
+
+void main() {
+    vec3 albedo = m_albedo;
+    float metallic = m_metallic;
+    float roughness = m_roughness;
+    vec3 normal = o_norm;
+    vec3 pos = o_pos;
+    
+    if(has_tex == 1) {
+        vec3 color = texture(tex, scale_uv(o_uv, tex_scale)).rgb;
+        albedo = pow(color, vec3(2.2));
+    }
+    if(has_tex_norm == 1) {
+        normal = texture(tex_norm, scale_uv(o_uv, tex_norm_scale)).rgb;
+        normal = normalize(normal * 2 - vec3(1,1,1));
+        vec3 tmp;
+        tmp.y = normal.z;
+        tmp.x = normal.x;
+        tmp.z = normal.y;
+        normal = tmp;
+    }
+    // frag_color = vec4(norm, 1);
+    // frag_color = vec4(color, 1);
+    // frag_color = vec4(vec3(0.5,0.5,0.5)+norm/2,1);
+    // frag_color = vec4(o_pos / 5 + vec3(0.5,0.5,0.5), 1);
+    // return;
+    
+    vec3 ambient = light_intense * m_ao * albedo * 0.02;
+    // ambient = vec3(0);
+    
+    vec3 color = L(light_position, light_intense, normal, pos, albedo, metallic, roughness) + ambient;
+
+    // Gamma correction
+    color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0/2.2));  
+
+    frag_color = vec4(color, 1);
+    
+    // frag_color = vec4(diffuse, 0);
+    // frag_color = vec4(color, 0);
+    // frag_color = vec4(specular, 0);
+}
+)";
+}
+
+PBRShader::PBRShader(): Shader(PBR::vertex_shader_text, PBR::fragment_shader_text) {
+    model = loc("model");
+    vp = loc("vp");
+    has_tex = loc("has_tex");
+    has_tex_norm = loc("has_tex_norm");
+    scale = loc("tex_scale");
+    norm_scale = loc("tex_norm_scale");
+    camera = loc("camera");
+    light_position = loc("light_position");
+    light_intense = loc("light_intense");
+    light_vp = loc("light_vp");
+    light_direction = loc("light_direction");
+    depth_map = loc("depth_map");
+    tex = loc("tex");
+    tex_norm = loc("tex_norm");
+    has_depth_map = loc("has_depth_map");
+    m_albedo = loc("m_albedo");
+    m_metallic = loc("m_metallic");
+    m_roughness = loc("m_roughness");
+    m_ao = loc("m_ao");
+}
+void PBRShader::set_mvp(glm::mat4 _model, glm::mat4 _vp) {
+    glUniformMatrix4fv(model, 1, false, (GLfloat *)&_model);
+    glUniformMatrix4fv(vp, 1, false, (GLfloat *)&_vp);
+}
+void PBRShader::set_material(Material *material) {
+    glUniform1i(tex, 0);
+    glUniform1i(tex_norm, 1);
+    if(material == nullptr) {
+        glUniform1i(has_tex, 0);
+        CheckGLError();
+        uniform_vec3(m_albedo, glm::vec3(0.f,0,0));
+        glUniform1f(m_metallic, 0.5);
+        glUniform1f(m_roughness, 0.5);
+        glUniform1f(m_ao, 0.1);
+    } else {
+        if(material->texture != nullptr) {
+            CheckGLError();
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, material->texture->get());
+            CheckGLError();
+            glUniform1i(has_tex, 1);
+            CheckGLError();
+        } else {
+            glUniform1i(has_tex, 0);
+            CheckGLError();
+        }
+        if(material->texture_normal != nullptr) {
+            CheckGLError();
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, material->texture_normal->get());
+            CheckGLError();
+            glUniform1i(has_tex_norm, 1);
+            CheckGLError();
+        } else {
+            glUniform1i(has_tex_norm, 0);
+            CheckGLError();
+        }
+        uniform_vec3(scale, material->texture_scale);
+        CheckGLError();
+        uniform_vec3(norm_scale, material->texture_normal_scale);
+        CheckGLError();
+        uniform_vec3(m_albedo, material -> Kd);
+        glUniform1f(m_ao, material->ao);
+        glUniform1f(m_metallic, material->metallic);
+        glUniform1f(m_roughness, material->roughness);
+    }
+}
+void PBRShader::set_light(glm::vec3 position, glm::vec3 intense, glm::vec3 direction) {
+    uniform_vec3(light_position, position);
+    CheckGLError();
+    uniform_vec3(light_intense, intense);
+    CheckGLError();
+    uniform_vec3(light_direction, direction);
+    CheckGLError();
+}
+void PBRShader::set_camera(glm::vec3 cam) {
+    uniform_vec3(camera, cam);
+    CheckGLError();
+}
+void PBRShader::set_depth(GLuint map, glm::mat4 vp) {
+    if(map == 0) {
+        glUniform1i(has_depth_map, 0);
+    } else {
+        glUniform1i(has_depth_map, 1);
+        glUniform1i(depth_map, 2);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, map);
+
+        glUniformMatrix4fv(light_vp, 1, false, (GLfloat *)&vp);
+    }
+}

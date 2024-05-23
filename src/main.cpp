@@ -93,11 +93,18 @@ public:
         puts("init draw");
         scene->init_draw();
         scene->model()["plant"] = glm::translate(glm::mat4(1.f), glm::vec3(0, -1, 0));
+        scene->model()["robot"] = glm::translate(glm::mat4(1.f), glm::vec3(0.7f, -1.f, 0.7f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.01));
         scene->activate_shadow();
         puts("Enter main loop");
         auto last = glfwGetTime();
         int frame_count = 0;
         while (!glfwWindowShouldClose(window)) {
+            for(auto &[x,y]: scene -> meshes) if(x == "ground") {
+                for(auto m: y->mtl->materials) {
+                    m->roughness = roughness;
+                    m->metallic= metallic;
+                }
+            }
             auto now = glfwGetTime();
             control_update_frame(now);
             // printf("Frame: %d\n", ++frame_count);
@@ -143,6 +150,7 @@ int main(int argc, char **argv) {
             i++;
             continue;
         }
+        printf("loading %s %s\n", name.c_str(), argv[i]);
         app.load(name, argv[i]);
     }
     app.main_loop();

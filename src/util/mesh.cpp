@@ -143,7 +143,7 @@ Mesh::Mesh(const Path &path) {
     }
     printf("Obj loaded, time: %lfs\n", 1. * (clock() - begin_time) / CLOCKS_PER_SEC);
     try {
-        shader = std::make_unique <PhongShader> ();
+        shader = std::make_unique <PBRShader> ();
     } catch (std::string msg) {
         warn(2, "[ERROR] Fail to load shader program: %s", msg.c_str());
         exit(1);
@@ -217,13 +217,13 @@ void Mesh::init_draw() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     CheckGLError();
 }
-void Mesh::draw(glm::mat4 trans, glm::vec3 camera, glm::vec3 light_position, glm::vec3 light_intense, glm::vec3 light_direction, GLuint depth_map, glm::mat4 light_transform) const {
+void Mesh::draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera, glm::vec3 light_position, glm::vec3 light_intense, glm::vec3 light_direction, GLuint depth_map, glm::mat4 light_vp) const {
     shader -> use();
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     shader->set_light(light_position, light_intense, light_direction);
     shader->set_camera(camera);
-    shader->set_transform(trans);
-    shader->set_depth(depth_map, light_transform);
+    shader->set_mvp(model, vp);
+    shader->set_depth(depth_map, light_vp);
     for(const auto &object: objects) {
         shader->set_material(object.material());
         // printf("%s %p\n", object.c_name(), object.material());
@@ -247,7 +247,7 @@ Mesh::Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 co
     vertices.emplace_back(c, glm::vec2(0), normal);
     objects.emplace_back(std::string("triangle"), std::vector<uint32_t>{0,1,2}, material);
     try {
-        shader = std::make_unique <PhongShader> ();
+        shader = std::make_unique <PBRShader> ();
     } catch (std::string msg) {
         warn(2, "[ERROR] Fail to load shader program: %s", msg.c_str());
         exit(1);

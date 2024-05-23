@@ -37,14 +37,17 @@ public:
 
 class PhongShader: public Shader {
     // const GLint trans = 0, Ka = 1, Kd = 2, scale = 3, type = 4, camera = 5, light = 6;
-    GLint trans, Ka, Kd, scale, norm_scale, has_tex, has_tex_norm, camera, light_position, light_intense, light_direction, light_transform, depth_map, tex, tex_norm, has_depth_map;
+    GLint model, vp, Ka, Kd, scale, norm_scale,
+        has_tex, has_tex_norm, camera,
+        light_position, light_intense, light_direction, light_vp,
+        depth_map, tex, tex_norm, has_depth_map;
 public:
     PhongShader();
-    void set_transform(glm::mat4 transform);
+    void set_mvp(glm::mat4 model, glm::mat4 vp);
     void set_material(Material *material);
     void set_light(glm::vec3 light_position, glm::vec3 light_intense, glm::vec3 light_direction);
     void set_camera(glm::vec3 camera);
-    void set_depth(GLuint depth_map, glm::mat4 light_transform);
+    void set_depth(GLuint depth_map, glm::mat4 light_vp);
 };
 
 class DepthShader: public Shader {
@@ -54,4 +57,18 @@ public:
     void set_transform(glm::mat4 transform);
 };
 
+class PBRShader : public Shader {
+    GLint model, vp, scale, norm_scale,
+        has_tex, has_tex_norm, camera,
+        light_position, light_intense, light_direction, light_vp,
+        depth_map, tex, tex_norm, has_depth_map,
+        m_albedo, m_metallic, m_roughness, m_ao;
 
+public:
+    PBRShader();
+    void set_mvp(glm::mat4 model, glm::mat4 vp);
+    void set_material(Material *material);
+    void set_light(glm::vec3 light_position, glm::vec3 light_intense, glm::vec3 light_direction);
+    void set_camera(glm::vec3 camera);
+    void set_depth(GLuint depth_map, glm::mat4 light_vp);
+};
