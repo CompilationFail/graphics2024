@@ -116,8 +116,9 @@ void ui() {
     if (ui_window) {
         ImGui::Begin("Venus", &ui_window);
         ImGui::Text("FPS: %f", fps);
-        /*ImGui::Text("pitch: %.03f, yaw: %.03f", pitch, yaw);
-        auto d = dir(), r = right(), u = up();
+        ImGui::Text("pitch: %.03f, yaw: %.03f", camera->pitch, camera->yaw);
+        ImGui::Text("camera position:(%.03f,%.03f,%.03f)", camera->position.x, camera->position.y, camera->position.z);
+        /*auto d = dir(), r = right(), u = up();
         ImGui::Text("direction: (%f, %f, %f)", d.x, d.y, d.z);
         ImGui::Text("right: (%f, %f, %f)", r.x, r.y, r.z);
         ImGui::Text("up: (%f, %f, %f)", u.x, u.y, u.z);

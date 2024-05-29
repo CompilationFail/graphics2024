@@ -37,6 +37,7 @@ class Application {
     // std::unique_ptr <Mesh> mesh, ground;
     // std::unique_ptr <ParticleSystem> ps;
     glm::mat4 model;
+    std::vector <std::pair <int,int>> beatmap;
 public:
     Application(): scene(nullptr) { }
     ~Application() {
@@ -47,20 +48,27 @@ public:
         printf("Terminated..");
     }
     void init() {
-        camera.position = glm::vec3(0.f,1.5f, 3.f);
-        camera.pitch = glm::radians(-35.f);
+        camera.position = glm::vec3(-0.6f,5.f, 8.f);
+        camera.pitch = glm::radians(-30.f);
         camera.yaw = -PI/2;
-        light.pitch = -PI/3;
-        light.yaw = PI * 0.6;
-        light.position = glm::vec3(1.65, 3, -2.1);
-        light_intense = glm::vec3(10, 10, 10);
-        window = window_init(width, height, "Ground and indoor planet");
+        light.pitch = -0.581;
+        light.yaw = PI;
+        light.position = glm::vec3(8.11, 6.91, -5.967);
+        light_intense = glm::vec3(100);
+        window = window_init(width, height, "wheelchair");
         glew_init();
         model = glm::mat4(1.f);
         init_control(window);
         Control::camera = &camera;
         scene = std::make_unique<Scene>();
         printf("Application initiated.\n");
+    }
+    void load_beatmap(const char* path) {
+        FILE *f = fopen(path, "r");
+        int t, p;
+        while(~fscanf(f, "%d%d", &t,&p)){ 
+            beatmap.emplace_back(t, p);
+        }
     }
     void load(std::string name, const Path &path) {
         try{
@@ -90,10 +98,11 @@ public:
                glm::translate(glm::mat4(1.f), -camera);
     }*/
     void main_loop() {
+        std::sort(beatmap.begin(), beatmap.end());
         puts("init draw");
         scene->init_draw();
-        scene->model()["plant"] = glm::translate(glm::mat4(1.f), glm::vec3(0, -1, 0));
-        scene->model()["robot"] = glm::translate(glm::mat4(1.f), glm::vec3(0.7f, -1.f, 0.7f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.01));
+        scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(0, -1, 0))};
+        scene->model()["robot"] = {glm::translate(glm::mat4(1.f), glm::vec3(0.7f, -1.f, 0.7f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.01))};
         scene->activate_shadow();
         puts("Enter main loop");
         auto last = glfwGetTime();
@@ -107,6 +116,13 @@ public:
             }
             auto now = glfwGetTime();
             control_update_frame(now);
+            /*scene->model()["wheel"] = {};
+            for(auto [t, x]: beatmap) {
+                int _t = t - now * 1000;
+                if(_t >= -300 && _t <= 1e4) {
+                    scene->model()["wheel"].push_back(glm::translate(glm::mat4(1.f), glm::vec3((x - 2) * 2.f, -1.f, -_t / 30.f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.04)));
+                }
+            }*/
             // printf("Frame: %d\n", ++frame_count);
 
             // printf("%f %f\n", pitch, yaw);
@@ -153,5 +169,6 @@ int main(int argc, char **argv) {
         printf("loading %s %s\n", name.c_str(), argv[i]);
         app.load(name, argv[i]);
     }
+    // app.load_beatmap("2.beatmap");
     app.main_loop();
 }

@@ -3,7 +3,7 @@
 Scene::Scene()
     : shadow(0), light_intense(0, 0, 0), light_position(0, 0, 0),
       light_vp(1.f), depth_map(0), light_direction(0, 0, 1) {}
-std::map<std::string, glm::mat4> &Scene::model() {
+std::map<std::string, std::vector <glm::mat4>> &Scene::model() {
     return _model;
 }
 void Scene::init_draw() {
@@ -67,7 +67,13 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
     glDepthFunc(GL_LESS);
     CheckGLError();
     for(auto &[name, mesh]: meshes) {
-        mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_position, light_intense, light_direction, shadow ? depth_map: 0, light_vp);
+        if(!_model.count(name)) {
+            mesh->draw(glm::mat4(1.f), vp, camera, light_position, light_intense, light_direction, shadow ? depth_map: 0, light_vp);
+        } else {
+            for(auto model: _model[name]) {
+                mesh->draw(model, vp, camera, light_position, light_intense, light_direction, shadow ? depth_map: 0, light_vp);
+            }
+        }
     }
 }
 void Scene::render_depth_buffer(glm::mat4 vp) {
@@ -82,11 +88,16 @@ void Scene::render_depth_buffer(glm::mat4 vp) {
     CheckGLError();
     depth_shader -> use();
     for(auto &[name, mesh]: meshes) {
-        glm::mat mvp = vp;
-        if(_model.count(name)) 
-            mvp = mvp * _model[name];
-        depth_shader ->set_transform(mvp);
-        mesh->draw_depth();
+        if(_model.count(name)) {
+            for(auto model: _model[name]) {
+                glm::mat mvp = vp * model;
+                depth_shader ->set_transform(mvp);
+                mesh->draw_depth();
+            }
+        } else {
+            depth_shader -> set_transform(vp);
+            mesh->draw_depth();
+        }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     CheckGLError();
