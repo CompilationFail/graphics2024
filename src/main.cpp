@@ -51,11 +51,19 @@ public:
         camera.position = glm::vec3(-0.6f,5.f, 8.f);
         camera.pitch = glm::radians(-30.f);
         camera.yaw = -PI/2;
+<<<<<<< HEAD
         light.pitch = -0.581;
         light.yaw = PI;
         light.position = glm::vec3(8.11, 6.91, -5.967);
         light_intense = glm::vec3(100);
         window = window_init(width, height, "wheelchair");
+=======
+        lights.push_back({
+            Camera{-0.581, PI, glm::vec3(8.11,6.91,-5.97)},
+            glm::vec3(100)
+        });
+        window = window_init(width, height, "Ground and indoor planet");
+>>>>>>> 7ea943242153fd0a5a48164e960e34e6bf6f52ab
         glew_init();
         model = glm::mat4(1.f);
         init_control(window);
@@ -141,7 +149,8 @@ public:
             // mesh->draw(vp * glm::rotate(glm::mat4(1.f), float(now / 50 * rot_speed), glm::vec3(0, 1, 0)), Control::camera, light);
             /*ground->draw(vp, Control::camera, light);
             mesh->draw(vp, Control::camera, light);*/
-            scene->update_light(light, light_intense);
+            scene->update_light(lights);
+            // light, light_intense);
             scene->render(window, vp, camera.position);
 
             // ps->set_particle_size(2e-3 * particle_size);

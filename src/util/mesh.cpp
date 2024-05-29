@@ -217,13 +217,15 @@ void Mesh::init_draw() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     CheckGLError();
 }
-void Mesh::draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera, glm::vec3 light_position, glm::vec3 light_intense, glm::vec3 light_direction, GLuint depth_map, glm::mat4 light_vp) const {
+void Mesh::draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera,
+                std::vector<LightInfo> light_info,
+                std::vector<GLuint> depth_map) {
     shader -> use();
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    shader->set_light(light_position, light_intense, light_direction);
+    shader->set_light(light_info);
     shader->set_camera(camera);
     shader->set_mvp(model, vp);
-    shader->set_depth(depth_map, light_vp);
+    shader->set_depth(depth_map);
     for(const auto &object: objects) {
         shader->set_material(object.material());
         // printf("%s %p\n", object.c_name(), object.material());

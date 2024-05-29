@@ -10,6 +10,7 @@
 #include "bound.hpp"
 #include "material.hpp"
 #include "shader.hpp"
+#include "camera.hpp"
 
 /* Simplified*/
 struct Vertex {
@@ -81,9 +82,9 @@ public:
      */
     Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 color);
     void init_draw();
-    void draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera, glm::vec3 light_position,
-              glm::vec3 light_intense, glm::vec3 light_direction, GLuint depth_map,
-              glm::mat4 light_vp) const;
+    void draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera,
+              std::vector<LightInfo> light_info,
+              std::vector<GLuint> depth_map);
     void draw_depth() const;
     Bound bound();
     void apply_transform(glm::mat4);
