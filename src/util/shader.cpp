@@ -390,11 +390,13 @@ uniform int has_tex;
 uniform int has_tex_norm;
 uniform vec3 camera;
 
-uniform vec3 light_position;
-uniform vec3 light_intense;
-uniform vec3 light_direction;
-uniform mat4 light_vp;
-uniform sampler2D depth_map;
+uniform int light_cnt;
+uniform vec3 light_position[10];
+uniform vec3 light_intense[10];
+uniform vec3 light_direction[10];
+uniform mat4 light_vp[10];
+
+uniform sampler2D depth_map[10];
 uniform int has_depth_map;
 
 float F0; // constant for fresnel term
@@ -442,7 +444,8 @@ float G_Smith(vec3 n, vec3 v, vec3 i, float roughness) {
     return G_SchlickGGX(max(0., dot(n, v)), roughness) * G_SchlickGGX(max(0., dot(n,i)), roughness);
 }
 
-vec3 L(vec3 light_pos, vec3 light_intense, vec3 n, vec3 pos, vec3 albedo, float metallic, float roughness) {
+vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light_vp, sampler2D depth_map, 
+    vec3 n, vec3 pos, vec3 albedo, float metallic, float roughness) {
     vec3 i = light_position - pos;
     float r = dot(i, i);
     i = normalize(i);
@@ -509,10 +512,17 @@ void main() {
     // frag_color = vec4(o_pos / 5 + vec3(0.5,0.5,0.5), 1);
     // return;
     
-    vec3 ambient = light_intense * m_ao * albedo * 0.02;
+    vec3 ambient = light_intense[0] * m_ao * albedo * 0.02;
     // ambient = vec3(0);
     
-    vec3 color = L(light_position, light_intense, normal, pos, albedo, metallic, roughness) + ambient;
+    vec3 color = vec3(0);
+    int i = 0;
+    for(; i < light_cnt; ++i) {
+        color += L(light_position[i], light_direction[i], light_intense[i], light_vp[i], depth_map[i],
+            normal, pos, albedo, metallic, roughness);
+    }
+
+    color += ambient;
 
     // Gamma correction
     color = color / (color + vec3(1.0));
@@ -539,6 +549,7 @@ PBRShader::PBRShader(): Shader(PBR::vertex_shader_text, PBR::fragment_shader_tex
     light_intense = loc("light_intense");
     light_vp = loc("light_vp");
     light_direction = loc("light_direction");
+    light_cnt = loc("light_cnt");
     depth_map = loc("depth_map");
     tex = loc("tex");
     tex_norm = loc("tex_norm");
@@ -595,27 +606,42 @@ void PBRShader::set_material(Material *material) {
         glUniform1f(m_roughness, material->roughness);
     }
 }
-void PBRShader::set_light(glm::vec3 position, glm::vec3 intense, glm::vec3 direction) {
-    uniform_vec3(light_position, position);
+void PBRShader::set_light(std::vector <LightInfo> info) {
+    // glm::vec3 position, glm::vec3 intense, glm::vec3 direction) {
+    int n = info.size();
+    std::vector <glm::vec3> tmp(n);
+    glUniform1i(light_cnt, n);
     CheckGLError();
-    uniform_vec3(light_intense, intense);
+    for(int i = 0; i < n; ++i) tmp[i] = info[i].camera.position;
+    glUniform3fv(light_position, n, (GLfloat*)tmp.data());
     CheckGLError();
-    uniform_vec3(light_direction, direction);
+    for(int i = 0; i < n; ++i) tmp[i] = info[i].intense;
+    glUniform3fv(light_intense, n, (GLfloat*)tmp.data());
+    CheckGLError();
+    for(int i = 0; i < n; ++i) tmp[i] = info[i].camera.dir();
+    glUniform3fv(light_direction, n, (GLfloat*)tmp.data());
+    CheckGLError();
+    std::vector <glm::mat4> tmp2(n);
+    for(int i = 0; i < n; ++i) tmp2[i] = info[i].vp();
+    glUniformMatrix4fv(light_vp, n, false, (GLfloat*)tmp2.data());
     CheckGLError();
 }
 void PBRShader::set_camera(glm::vec3 cam) {
     uniform_vec3(camera, cam);
     CheckGLError();
 }
-void PBRShader::set_depth(GLuint map, glm::mat4 vp) {
-    if(map == 0) {
+void PBRShader::set_depth(std::vector <GLuint> map) {
+    if(map.empty()) {
         glUniform1i(has_depth_map, 0);
     } else {
         glUniform1i(has_depth_map, 1);
-        glUniform1i(depth_map, 2);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, map);
-
-        glUniformMatrix4fv(light_vp, 1, false, (GLfloat *)&vp);
+        int n = map.size();
+        std::vector <int> tmp(n);
+        for(int i = 0; i < n; ++i) tmp[i] = i + 2;
+        glUniform1iv(depth_map, n, tmp.data());
+        for(int i = 0; i < n; ++i) {
+            glActiveTexture(GL_TEXTURE0 + 2 + i);
+            glBindTexture(GL_TEXTURE_2D, map[i]);
+        }
     }
 }

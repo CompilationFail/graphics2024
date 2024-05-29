@@ -50,10 +50,10 @@ public:
         camera.position = glm::vec3(0.f,1.5f, 3.f);
         camera.pitch = glm::radians(-35.f);
         camera.yaw = -PI/2;
-        light.pitch = -PI/3;
-        light.yaw = PI * 0.6;
-        light.position = glm::vec3(1.65, 3, -2.1);
-        light_intense = glm::vec3(10, 10, 10);
+        lights.push_back({
+            Camera{-0.581, PI, glm::vec3(8.11,6.91,-5.97)},
+            glm::vec3(100)
+        });
         window = window_init(width, height, "Ground and indoor planet");
         glew_init();
         model = glm::mat4(1.f);
@@ -125,7 +125,8 @@ public:
             // mesh->draw(vp * glm::rotate(glm::mat4(1.f), float(now / 50 * rot_speed), glm::vec3(0, 1, 0)), Control::camera, light);
             /*ground->draw(vp, Control::camera, light);
             mesh->draw(vp, Control::camera, light);*/
-            scene->update_light(light, light_intense);
+            scene->update_light(lights);
+            // light, light_intense);
             scene->render(window, vp, camera.position);
 
             // ps->set_particle_size(2e-3 * particle_size);

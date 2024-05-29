@@ -6,6 +6,7 @@
 #include <vector>
 #include "common.hpp"
 #include "material.hpp"
+#include "camera.hpp"
 
 GLuint prepare_program();
 
@@ -60,7 +61,7 @@ public:
 class PBRShader : public Shader {
     GLint model, vp, scale, norm_scale,
         has_tex, has_tex_norm, camera,
-        light_position, light_intense, light_direction, light_vp,
+        light_position, light_intense, light_direction, light_vp, light_cnt,
         depth_map, tex, tex_norm, has_depth_map,
         m_albedo, m_metallic, m_roughness, m_ao;
 
@@ -68,7 +69,7 @@ public:
     PBRShader();
     void set_mvp(glm::mat4 model, glm::mat4 vp);
     void set_material(Material *material);
-    void set_light(glm::vec3 light_position, glm::vec3 light_intense, glm::vec3 light_direction);
+    void set_light(std::vector <LightInfo> light_info);
     void set_camera(glm::vec3 camera);
-    void set_depth(GLuint depth_map, glm::mat4 light_vp);
+    void set_depth(std::vector <GLuint> depth_map);
 };

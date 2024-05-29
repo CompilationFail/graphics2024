@@ -4,6 +4,8 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+#include <string>
+#include <vector>
 
 float roughness = 0.3;
 float metallic = 0.6;
@@ -12,13 +14,16 @@ float debug_x, debug_y, debug_z;
 /*float particle_size = 1.5;
 float rot_speed = 1;
 int particle_number = 4e4; */
-glm::vec3 light_intense;
+
+Camera camera;
+std::vector <LightInfo> lights;
 
 /*glm::vec3 rotate(glm::vec3 d, glm::vec3 axis, float angle) {
     return glm::rotate(glm::mat4(1.f), angle, axis) * glm::vec4(d, 1);
 }*/
 
-Camera camera, light, tmp;
+Camera *cameras[10]; 
+int camera_cnt, current_camera;
 
 namespace Control {
 
@@ -54,14 +59,7 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     if (key == GLFW_KEY_D) key_WASD[3] = action;
     if (key == GLFW_KEY_U && action == GLFW_PRESS) ui_window ^= 1;
     if (key == GLFW_KEY_L && action == GLFW_PRESS) {
-        if(camera == &::camera) {
-            tmp = ::camera;
-            ::camera = light;
-            camera = &light;
-        } else {
-            camera = &::camera;
-            ::camera = tmp;
-        }
+        camera = cameras[current_camera = (current_camera + 1) % camera_cnt];
     }
     if (key == GLFW_KEY_M && action == GLFW_PRESS) {
         enable_mouse_control ^= 1;
@@ -96,9 +94,6 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 
 void update(double now) {
     if(!camera) return;
-    if(camera == &light) {
-        ::camera = light;
-    }
     for (int i = 0; i < 4; ++i)
     {
         if (key_WASD[i])
@@ -129,13 +124,16 @@ void ui() {
         ImGui::SliderFloat("Particle size:", &particle_size, 0.1, 10);
         ImGui::SliderFloat("Rotate speed", &rot_speed, 0.1, 5);
         ImGui::SliderInt("Particle number", &particle_number, 1000, 1e5);*/
-        ImGui::Text("Light");
-        ImGui::SliderFloat("l_pos.x:", &light.position.x, -100, 100);
-        ImGui::SliderFloat("l_pos.y:", &light.position.y, -100, 100);
-        ImGui::SliderFloat("l_pos.z:", &light.position.z, -100, 100);
-        ImGui::SliderFloat("intense.x:", &light_intense.x, 0, 200);
-        ImGui::SliderFloat("intense.y:", &light_intense.y, 0, 200);
-        ImGui::SliderFloat("intense.z:", &light_intense.z, 0, 200);
+        ImGui::Text("Lights Info");
+        for(int i = 0; i < (int) lights.size(); ++i) {
+            auto &l = lights[i];
+            /*ImGui::SliderFloat((std::to_string(i) + ": pos.x:").c_str(), &l.camera.position.x, -100, 100);
+            ImGui::SliderFloat((std::to_string(i) + ": pos.y:").c_str(), &l.camera.position.y, -100, 100);
+            ImGui::SliderFloat((std::to_string(i) + ": pos.z:").c_str(), &l.camera.position.z, -100, 100);*/
+            ImGui::SliderFloat((std::to_string(i) + ": intense.x:").c_str(), &l.intense.x, -100, 100);
+            ImGui::SliderFloat((std::to_string(i) + ": intense.y:").c_str(), &l.intense.y, -100, 100);
+            ImGui::SliderFloat((std::to_string(i) + ": intense.z:").c_str(), &l.intense.z, -100, 100);
+        }
         ImGui::Text("Ground Material");
         ImGui::SliderFloat("roughness:", &roughness, 0, 1);
         ImGui::SliderFloat("metallic:", &metallic, 0, 1);
@@ -151,6 +149,10 @@ void ui() {
 }
 
 void init_control(GLFWwindow *window) {
+    cameras[0] = &camera;
+    for(int i = 0; i < (int)lights.size(); ++i) 
+        cameras[i + 1] = &lights[i].camera;
+    camera_cnt = lights.size() + 1;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetKeyCallback(window, Control::key_callback);
     glfwSetMouseButtonCallback(window, Control::mouse_button_callback);
