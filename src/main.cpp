@@ -51,19 +51,11 @@ public:
         camera.position = glm::vec3(-0.6f,5.f, 8.f);
         camera.pitch = glm::radians(-30.f);
         camera.yaw = -PI/2;
-<<<<<<< HEAD
-        light.pitch = -0.581;
-        light.yaw = PI;
-        light.position = glm::vec3(8.11, 6.91, -5.967);
-        light_intense = glm::vec3(100);
-        window = window_init(width, height, "wheelchair");
-=======
         lights.push_back({
             Camera{-0.581, PI, glm::vec3(8.11,6.91,-5.97)},
             glm::vec3(100)
         });
         window = window_init(width, height, "Ground and indoor planet");
->>>>>>> 7ea943242153fd0a5a48164e960e34e6bf6f52ab
         glew_init();
         model = glm::mat4(1.f);
         init_control(window);
@@ -111,7 +103,7 @@ public:
         scene->init_draw();
         scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(0, -1, 0))};
         scene->model()["robot"] = {glm::translate(glm::mat4(1.f), glm::vec3(0.7f, -1.f, 0.7f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.01))};
-        scene->activate_shadow();
+        // scene->activate_shadow();
         puts("Enter main loop");
         auto last = glfwGetTime();
         int frame_count = 0;

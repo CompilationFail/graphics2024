@@ -24,13 +24,10 @@ public:
         meshes.emplace_back(name, std::make_unique <Mesh> (args ...));
         // meshes.back().second->apply_transform(meshes.back().second->bound().to_local());
     }
-    void init_draw();
-    void update_light(Camera light, glm::vec3 intense);
-    void activate_shadow(int width = 1000, int height = 1000, float fov = glm::radians(45.f));
     std::map <std::string, std::vector<glm::mat4>> &model();
+    void init_draw();
+    void activate_shadow();
     void update_light(std::vector <LightInfo> info);
-    void activate_shadow(); // int width = 1000, int height = 1000, float fov = glm::radians(45.f));
-    std::map <std::string, glm::mat4> &model();
     void render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera);
 };
 

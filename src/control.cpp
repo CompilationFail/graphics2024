@@ -5,7 +5,6 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <string>
-#include <vector>
 
 float roughness = 0.3;
 float metallic = 0.6;
@@ -17,10 +16,6 @@ int particle_number = 4e4; */
 
 Camera camera;
 std::vector <LightInfo> lights;
-
-/*glm::vec3 rotate(glm::vec3 d, glm::vec3 axis, float angle) {
-    return glm::rotate(glm::mat4(1.f), angle, axis) * glm::vec4(d, 1);
-}*/
 
 Camera *cameras[10]; 
 int camera_cnt, current_camera;
@@ -134,7 +129,7 @@ void ui() {
             ImGui::SliderFloat((std::to_string(i) + ": intense.x:").c_str(), &l.intense.x, -100, 100);
             ImGui::SliderFloat((std::to_string(i) + ": intense.y:").c_str(), &l.intense.y, -100, 100);
             ImGui::SliderFloat((std::to_string(i) + ": intense.z:").c_str(), &l.intense.z, -100, 100);
-        }
+        } 
         ImGui::Text("Ground Material");
         ImGui::SliderFloat("roughness:", &roughness, 0, 1);
         ImGui::SliderFloat("metallic:", &metallic, 0, 1);
@@ -150,10 +145,6 @@ void ui() {
 }
 
 void init_control(GLFWwindow *window) {
-    cameras[0] = &camera;
-    for(int i = 0; i < (int)lights.size(); ++i) 
-        cameras[i + 1] = &lights[i].camera;
-    camera_cnt = lights.size() + 1;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetKeyCallback(window, Control::key_callback);
     glfwSetMouseButtonCallback(window, Control::mouse_button_callback);

@@ -5,7 +5,7 @@ Scene::Scene()
 Scene::~Scene() {
     depth_shader = nullptr;
 }
-std::map<std::string, glm::mat4> &Scene::model() {
+std::map<std::string, std::vector<glm::mat4>> &Scene::model() {
     return _model;
 }
 void Scene::init_draw() {
@@ -44,13 +44,13 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
     CheckGLError();
     for(auto &[name, mesh]: meshes) {
         if(!_model.count(name)) {
-            mesh->draw(glm::mat4(1.f), vp, camera, light_position, light_intense, light_direction, shadow ? depth_map: 0, light_vp);
+            mesh->draw(glm::mat4(1.f), vp, camera, light_info, depth_map);
         } else {
             for(auto model: _model[name]) {
-                mesh->draw(model, vp, camera, light_position, light_intense, light_direction, shadow ? depth_map: 0, light_vp);
+                mesh->draw(model, vp, camera, light_info, depth_map);
             }
         }
-        mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_info, depth_map);
+        // mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_info, depth_map);
     }
 }
 void Scene::render_depth_buffer() {
@@ -67,23 +67,7 @@ void Scene::render_depth_buffer() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);  
     }
     glBindFramebuffer(GL_FRAMEBUFFER, depth_buffer);
-    CheckGLError();
-    glClear(GL_DEPTH_BUFFER_BIT);
-    CheckGLError();
-    glEnable(GL_DEPTH_TEST);
-    CheckGLError();
-    glDepthFunc(GL_LESS);
-    CheckGLError();
-    depth_shader -> use();
-    for(auto &[name, mesh]: meshes) {
-        if(_model.count(name)) {
-            for(auto model: _model[name]) {
-                glm::mat mvp = vp * model;
-                depth_shader ->set_transform(mvp);
-                mesh->draw_depth();
-            }
-        } else {
-            depth_shader -> set_transform(vp);
+
     for(int i = 0; i < (int)light_info.size(); ++i) {
         auto &light = light_info[i];
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map[i], 0);
@@ -101,10 +85,16 @@ void Scene::render_depth_buffer() {
         auto vp = light.vp();
         for(auto &[name, mesh]: meshes) {
             glm::mat mvp = vp;
-            if(_model.count(name)) 
-                mvp = mvp * _model[name];
-            depth_shader ->set_transform(mvp);
-            mesh->draw_depth();
+            if(_model.count(name)) {
+                for(auto model: _model[name]) {
+                    glm::mat mvp = vp * model;
+                    depth_shader ->set_transform(mvp);
+                    mesh->draw_depth();
+                }
+            } else {
+                depth_shader -> set_transform(vp);
+                mesh->draw_depth();
+            }
         }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
