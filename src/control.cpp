@@ -9,7 +9,7 @@
 float roughness = 0.3;
 float metallic = 0.6;
 
-float debug_x, debug_y, debug_z;
+float debug_x, debug_y = -1, debug_z;
 /*float particle_size = 1.5;
 float rot_speed = 1;
 int particle_number = 4e4; */
@@ -126,17 +126,17 @@ void ui() {
             /*ImGui::SliderFloat((std::to_string(i) + ": pos.x:").c_str(), &l.camera.position.x, -100, 100);
             ImGui::SliderFloat((std::to_string(i) + ": pos.y:").c_str(), &l.camera.position.y, -100, 100);
             ImGui::SliderFloat((std::to_string(i) + ": pos.z:").c_str(), &l.camera.position.z, -100, 100);*/
-            ImGui::SliderFloat((std::to_string(i) + ": intense.x:").c_str(), &l.intense.x, -100, 100);
-            ImGui::SliderFloat((std::to_string(i) + ": intense.y:").c_str(), &l.intense.y, -100, 100);
-            ImGui::SliderFloat((std::to_string(i) + ": intense.z:").c_str(), &l.intense.z, -100, 100);
+            ImGui::SliderFloat((std::to_string(i) + ": intense.x:").c_str(), &l.intense.x, -10, 10);
+            ImGui::SliderFloat((std::to_string(i) + ": intense.y:").c_str(), &l.intense.y, -10, 10);
+            ImGui::SliderFloat((std::to_string(i) + ": intense.z:").c_str(), &l.intense.z, -10, 10);
         } 
         ImGui::Text("Ground Material");
         ImGui::SliderFloat("roughness:", &roughness, 0, 1);
         ImGui::SliderFloat("metallic:", &metallic, 0, 1);
-        /*ImGui::Text("Debug parameters");
-        ImGui::SliderFloat("x:", &debug_x, 0, 1);
-        ImGui::SliderFloat("y:", &debug_y, 0, 1);
-        ImGui::SliderFloat("z:", &debug_z, -100, 100);*/
+        ImGui::Text("Debug parameters");
+        ImGui::SliderFloat("x:", &debug_x, -100, 100);
+        ImGui::SliderFloat("y:", &debug_y, -100, 100);
+        ImGui::SliderFloat("z:", &debug_z, -100, 100);
         ImGui::End();
     }
     ImGui::Render();
@@ -145,6 +145,9 @@ void ui() {
 }
 
 void init_control(GLFWwindow *window) {
+    camera_cnt = lights.size() + 1;
+    cameras[0] = Control::camera = &camera;
+    for(int i = 1; i < camera_cnt; ++i) cameras[i] = &lights[i-1].camera;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetKeyCallback(window, Control::key_callback);
     glfwSetMouseButtonCallback(window, Control::mouse_button_callback);

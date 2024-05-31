@@ -61,7 +61,7 @@ public:
 class PBRShader : public Shader {
     GLint model, vp, scale, norm_scale,
         has_tex, has_tex_norm, camera,
-        light_position, light_intense, light_direction, light_vp, light_cnt,
+        light_position, light_intense, light_direction, light_vp, light_type, light_cnt,
         depth_map, tex, tex_norm, has_depth_map,
         m_albedo, m_metallic, m_roughness, m_ao;
 

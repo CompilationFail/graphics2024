@@ -65,15 +65,17 @@ void Scene::render_depth_buffer() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);  
+        
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, depth_buffer);
 
     for(int i = 0; i < (int)light_info.size(); ++i) {
         auto &light = light_info[i];
+        glViewport(0, 0, depth_map_width, depth_map_height);
+        glBindFramebuffer(GL_FRAMEBUFFER, depth_buffer);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map[i], 0);
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
-        glViewport(0, 0, depth_map_width, depth_map_height);
+        CheckGLError();
 
         glClear(GL_DEPTH_BUFFER_BIT);
         CheckGLError();
@@ -84,11 +86,9 @@ void Scene::render_depth_buffer() {
         depth_shader -> use();
         auto vp = light.vp();
         for(auto &[name, mesh]: meshes) {
-            glm::mat mvp = vp;
             if(_model.count(name)) {
                 for(auto model: _model[name]) {
-                    glm::mat mvp = vp * model;
-                    depth_shader ->set_transform(mvp);
+                    depth_shader ->set_transform(vp * model);
                     mesh->draw_depth();
                 }
             } else {
@@ -96,9 +96,9 @@ void Scene::render_depth_buffer() {
                 mesh->draw_depth();
             }
         }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        CheckGLError();
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    CheckGLError();
 }
 
 

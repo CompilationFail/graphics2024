@@ -51,11 +51,27 @@ public:
         camera.position = glm::vec3(-0.6f,5.f, 8.f);
         camera.pitch = glm::radians(-30.f);
         camera.yaw = -PI/2;
-        lights.push_back({
+        /*lights.push_back({
             Camera{-0.581, PI, glm::vec3(8.11,6.91,-5.97)},
-            glm::vec3(100)
+            glm::vec3(100),
+            CONE_LIGHT
+        });*/
+        /*lights.push_back({
+            Camera{-0.584, 0.731, glm::vec3(-2.81,1.744,-2.521)},
+            glm::vec3(30),
+            CONE_LIGHT,
+        });*/
+        lights.push_back({
+            Camera{-0.584, 0.731, glm::vec3(-2.81,1.744,-2.521)},
+            glm::vec3(1),
+            DIRECTIONAL_LIGHT,
         });
-        window = window_init(width, height, "Ground and indoor planet");
+        lights.push_back({
+            Camera{-0.584, float(0.731 + PI / 2), glm::vec3(2.81,1.744,-2.521)},
+            glm::vec3(20),
+            POINT_LIGHT,
+        });
+        window = window_init(width, height, "wheel chair player");
         glew_init();
         model = glm::mat4(1.f);
         init_control(window);
@@ -101,13 +117,13 @@ public:
         std::sort(beatmap.begin(), beatmap.end());
         puts("init draw");
         scene->init_draw();
-        scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(0, -1, 0))};
         scene->model()["robot"] = {glm::translate(glm::mat4(1.f), glm::vec3(0.7f, -1.f, 0.7f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.01))};
-        // scene->activate_shadow();
+        scene->activate_shadow();
         puts("Enter main loop");
         auto last = glfwGetTime();
         int frame_count = 0;
         while (!glfwWindowShouldClose(window)) {
+            scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(debug_x, debug_y, debug_z))};
             for(auto &[x,y]: scene -> meshes) if(x == "ground") {
                 for(auto m: y->mtl->materials) {
                     m->roughness = roughness;
@@ -126,7 +142,15 @@ public:
             // printf("Frame: %d\n", ++frame_count);
 
             // printf("%f %f\n", pitch, yaw);
-            auto vp = projection() * camera.view();
+            auto vp = projection() * Control::camera->view();
+            /*for(auto i: {glm::vec3(0,0,0), glm::vec3(0,0,1), glm::vec3(0,1,1), glm::vec3(1,1,1)}) {
+                auto p = vp * glm::vec4(i, 1);
+                auto q = glm::vec3(p.xyz) / p.w;
+                printf("%f %f %f\n", q.x,q.y,q.z);
+            }
+            return;*/
+            ;
+           // lights[0].vp();
             /* {
                 glm::vec4 p = mvp * glm::vec4(0.5,0.5,-1,1);
                 auto q = p.xyz() / p.w;

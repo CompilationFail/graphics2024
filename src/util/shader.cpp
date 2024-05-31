@@ -381,7 +381,8 @@ in vec2 o_uv;
 in vec3 o_pos;
 in vec3 o_norm;
 
-uniform mat4 transform;
+uniform mat4 vp;
+
 uniform sampler2D tex;
 uniform sampler2D tex_norm;
 uniform vec3 tex_scale;
@@ -395,6 +396,7 @@ uniform vec3 light_position[10];
 uniform vec3 light_intense[10];
 uniform vec3 light_direction[10];
 uniform mat4 light_vp[10];
+uniform int light_type[10];
 
 uniform sampler2D depth_map[10];
 uniform int has_depth_map;
@@ -444,11 +446,14 @@ float G_Smith(vec3 n, vec3 v, vec3 i, float roughness) {
     return G_SchlickGGX(max(0., dot(n, v)), roughness) * G_SchlickGGX(max(0., dot(n,i)), roughness);
 }
 
-vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light_vp, sampler2D depth_map, 
+vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light_vp, int light_type, sampler2D depth_map, 
     vec3 n, vec3 pos, vec3 albedo, float metallic, float roughness) {
+    
     vec3 i = light_position - pos;
     float r = dot(i, i);
+    if(light_type == 2) i = -light_direction;
     i = normalize(i);
+    
     vec3 v = normalize(camera - pos);
     vec3 h = normalize(i + v);
 
@@ -458,17 +463,27 @@ vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light
     if(has_depth_map != 0) {
         vec4 lpos_w = light_vp * vec4(pos, 1);
         vec3 lpos = (lpos_w.xyz / lpos_w.w + vec3(1)) / 2;
-        if(lpos.x >= 0 && lpos.x < 1 && lpos.y >= 0 && lpos.y < 1) {
+        if(lpos.x >= 0 && lpos.x < 1 && lpos.y >= 0 && lpos.y < 1 && lpos.z >= 0 && lpos.z < 1) {
             float depth = texture(depth_map, lpos.xy).r;
-            if(lpos.z > depth + 1e-3) return vec3(0);
+            // return vec3(lpos.x, lpos.y, lpos.z);
+            // depth / 10.0);
+            float bias = max(0.01 * (1.0 - dot(n, i)), 0.001) * 0.5; 
+            if(lpos.z > depth + bias) return vec3(0);
         }
     }
+
+        
     // cone light
-    if(dot(-light_direction, i) < 0.7) {
+    if(light_type == 1 && dot(-light_direction, i) < 0.7) {
         return vec3(0);
     }
-    
+    // point light
     vec3 radiance = light_intense / r;
+
+    if(light_type == 2) {
+        // directional light
+        radiance = light_intense;
+    }
 
     vec3 F0 = vec3(0.04); 
     F0      = mix(F0, albedo, metallic);
@@ -509,16 +524,20 @@ void main() {
     // frag_color = vec4(norm, 1);
     // frag_color = vec4(color, 1);
     // frag_color = vec4(vec3(0.5,0.5,0.5)+norm/2,1);
-    // frag_color = vec4(o_pos / 5 + vec3(0.5,0.5,0.5), 1);
-    // return;
+    /*vec4 lpos = vp * vec4(o_pos, 1);
+    vec3 tmp = lpos.xyz / lpos.w;
+    tmp.z = (tmp.z - 0.98) * 50;
+    frag_color = vec4(tmp, 1);
+    // o_pos / 5 + vec3(0.5,0.5,0.5), 1);
+    return;*/
     
-    vec3 ambient = light_intense[0] * m_ao * albedo * 0.02;
+    vec3 ambient = light_intense[0] * m_ao * albedo * 0.002;
     // ambient = vec3(0);
     
     vec3 color = vec3(0);
     int i = 0;
     for(; i < light_cnt; ++i) {
-        color += L(light_position[i], light_direction[i], light_intense[i], light_vp[i], depth_map[i],
+        color += L(light_position[i], light_direction[i], light_intense[i], light_vp[i], light_type[i], depth_map[i],
             normal, pos, albedo, metallic, roughness);
     }
 
@@ -549,6 +568,7 @@ PBRShader::PBRShader(): Shader(PBR::vertex_shader_text, PBR::fragment_shader_tex
     light_intense = loc("light_intense");
     light_vp = loc("light_vp");
     light_direction = loc("light_direction");
+    light_type = loc("light_type");
     light_cnt = loc("light_cnt");
     depth_map = loc("depth_map");
     tex = loc("tex");
@@ -625,6 +645,10 @@ void PBRShader::set_light(std::vector <LightInfo> info) {
     for(int i = 0; i < n; ++i) tmp2[i] = info[i].vp();
     glUniformMatrix4fv(light_vp, n, false, (GLfloat*)tmp2.data());
     CheckGLError();
+    std::vector <GLint> tmp3(n);
+    for(int i = 0; i < n; ++i) tmp3[i] = info[i].type;
+    glUniform1iv(light_type, n, (GLint*)tmp3.data());
+    CheckGLError();
 }
 void PBRShader::set_camera(glm::vec3 cam) {
     uniform_vec3(camera, cam);
@@ -638,10 +662,12 @@ void PBRShader::set_depth(std::vector <GLuint> map) {
         int n = map.size();
         std::vector <int> tmp(n);
         for(int i = 0; i < n; ++i) tmp[i] = i + 2;
-        glUniform1iv(depth_map, n, tmp.data());
+        glUniform1iv(depth_map, n, (GLint*)tmp.data());
         for(int i = 0; i < n; ++i) {
             glActiveTexture(GL_TEXTURE0 + 2 + i);
+            CheckGLError();
             glBindTexture(GL_TEXTURE_2D, map[i]);
+            CheckGLError();
         }
     }
 }

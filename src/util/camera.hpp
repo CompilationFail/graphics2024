@@ -15,15 +15,15 @@ struct Camera {
 };
 
 enum LightType {
-    POINT_LIGHT,
-    CONE_LIGHT,
-    DIRECTIONAL_LIGHT,
+    POINT_LIGHT = 0,
+    CONE_LIGHT = 1,
+    DIRECTIONAL_LIGHT = 2,
 };
 
 struct LightInfo {
     Camera camera;
     glm::vec3 intense;
     LightType type;
-    LightInfo(Camera camera, glm::vec3 intense, LightType type = POINT_LIGHT);
+    LightInfo(Camera camera, glm::vec3 intense, LightType type);
     glm::mat4 vp();
 };
