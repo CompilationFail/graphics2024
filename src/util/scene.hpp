@@ -24,6 +24,7 @@ public:
         meshes.emplace_back(name, std::make_unique <Mesh> (args ...));
         // meshes.back().second->apply_transform(meshes.back().second->bound().to_local());
     }
+    void load(Path path);
     std::map <std::string, std::vector<glm::mat4>> &model();
     void init_draw();
     void activate_shadow();

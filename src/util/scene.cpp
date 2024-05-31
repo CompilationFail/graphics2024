@@ -102,3 +102,11 @@ void Scene::render_depth_buffer() {
 }
 
 
+
+void Scene::load(Path path) {
+    ;
+    ;
+    ;
+    ;
+    ;
+}
