@@ -24,6 +24,6 @@ struct LightInfo {
     Camera camera;
     glm::vec3 intense;
     LightType type;
-    LightInfo(Camera camera, glm::vec3 intense, LightType type);
+    LightInfo(Camera camera = Camera(), glm::vec3 intense = glm::vec3(0), LightType type = POINT_LIGHT);
     glm::mat4 vp();
 };

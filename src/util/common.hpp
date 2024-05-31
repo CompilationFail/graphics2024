@@ -28,6 +28,8 @@ std::string unescape(const char *);
 int str_equal(const char *buf, const char *payload);
 bool readvec3(const char *str, glm::vec3 *dst, const char *arg);
 bool readvec2(const char *str, glm::vec2 *dst, const char *arg);
+bool readfloat(const char *str, float *dst, const char *arg);
+bool readint(const char *str, int *dst, const char *arg);
 
 glm::vec3 clamp_color(glm::vec3 &color);
 glm::vec3 apply_transform_vec3(glm::vec3, glm::mat4);
@@ -50,6 +52,8 @@ static std::vector<char> readFile(const char *filename) {
 }
 
 void uniform_vec3(GLint loc, glm::vec3 vec);
+
+char *nspace(char *ptr);
 
 void _CheckGLError(const char* file, int line);
 

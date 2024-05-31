@@ -1,32 +1,36 @@
-.tab: 4
+mesh 
+    name ground
+    path models/ground/ground.obj
+    scale 1 1 1
+    translate 0 0 0
+end
 
-model: ground
-    path: models/ground/ground.obj
-    scale: 1 1 1
-    translate: 0 0 0
+mesh
+    name plant
+    path models/Indoor plant 3/Low-Poly Plant_.obj 
+    scale 1 1 1
+    translate 0 -1 0
+end
 
+light
+    camera
+        pitch -0.584
+        yaw 0.731
+        pos -2.81 1.744 -2.521
+    end
+    intense 1 1 1
+    type 2
+end
 
-model: plant
-    path: models/Indoor plant 3/Low-Poly Plant_.obj 
-    scale: 1 1 1
-    translate: 0 -1 0
-
-light:
-    camera:
-        pitch: -0.584
-        yaw: 0.731
-        pos: -2.81 1.744 -2.521
-    intense: 1
-    type: 2
-
-light:
-    camera:
-        pitch: -0.584
-        yaw: 2.301
-        pos: 2.81 1.744 -2.521
-    intense: 30
-    type: 0
-
+light 
+    camera
+        pitch -0.584
+        yaw 2.301
+        pos 2.81 1.744 -2.521
+    end
+    intense 30 30 30
+    type 0
+end
 
 
 

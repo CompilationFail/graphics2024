@@ -98,9 +98,9 @@ Mesh::Mesh(const Path &path) {
                 sscanf(pos, "%u", &ind.positionIndex);
                 if(p1 && p1 + 1 != p2) {
                     sscanf(p1 + 1, "%u", &ind.uvIndex);
-                    if(p2) {
-                        sscanf(p2 + 1, "%u", &ind.normalIndex);
-                    }
+                }
+                if(p2) {
+                    sscanf(p2 + 1, "%u", &ind.normalIndex);
                 }
                 pos = nxt;
                 while(*pos && isspace(*pos)) pos++;

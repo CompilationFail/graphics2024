@@ -48,7 +48,7 @@ public:
         printf("Terminated..");
     }
     void init() {
-        camera.position = glm::vec3(-0.6f,5.f, 8.f);
+        camera.position = glm::vec3(-0.6f,2.f, 4.f);
         camera.pitch = glm::radians(-30.f);
         camera.yaw = -PI/2;
         /*lights.push_back({
@@ -61,16 +61,16 @@ public:
             glm::vec3(30),
             CONE_LIGHT,
         });*/
-        lights.push_back({
+        /*lights.push_back({
             Camera{-0.584, 0.731, glm::vec3(-2.81,1.744,-2.521)},
             glm::vec3(1),
             DIRECTIONAL_LIGHT,
-        });
-        lights.push_back({
+        });*/
+        /*lights.push_back({
             Camera{-0.584, float(0.731 + PI / 2), glm::vec3(2.81,1.744,-2.521)},
             glm::vec3(20),
             POINT_LIGHT,
-        });
+        });*/
         window = window_init(width, height, "wheel chair player");
         glew_init();
         model = glm::mat4(1.f);
@@ -108,6 +108,9 @@ public:
     glm::mat4 projection() {
         return glm::perspective(glm::radians(45.f), 1.f * width / height, .1f, 100.f);
     }
+    void load_scene(char *str) {
+        scene -> load(str);
+    }
     /*glm::mat4 view() {
         return glm::rotate(glm::mat4(1.f), -pitch, glm::vec3(1, 0, 0)) *
                glm::rotate(glm::mat4(1.f), yaw, glm::vec3(0, 1, 0)) *
@@ -124,12 +127,12 @@ public:
         int frame_count = 0;
         while (!glfwWindowShouldClose(window)) {
             scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(debug_x, debug_y, debug_z))};
-            for(auto &[x,y]: scene -> meshes) if(x == "ground") {
+            /*for(auto &[x,y]: scene -> meshes) if(x == "ground") {
                 for(auto m: y->mtl->materials) {
                     m->roughness = roughness;
                     m->metallic= metallic;
                 }
-            }
+            }*/
             auto now = glfwGetTime();
             control_update_frame(now);
             /*scene->model()["wheel"] = {};
@@ -165,7 +168,7 @@ public:
             // mesh->draw(vp * glm::rotate(glm::mat4(1.f), float(now / 50 * rot_speed), glm::vec3(0, 1, 0)), Control::camera, light);
             /*ground->draw(vp, Control::camera, light);
             mesh->draw(vp, Control::camera, light);*/
-            scene->update_light(lights);
+            // scene->update_light(lights);
             // light, light_intense);
             scene->render(window, vp, camera.position);
 
@@ -184,7 +187,7 @@ int main(int argc, char **argv) {
     }*/
     Application app;
     app.init();
-    std::string name = "";
+    /*std::string name = "";
     for(int i = 1; i < argc; ++i) {
         if(strcmp(argv[i], "-name") == 0) {
             name = argv[i + 1];
@@ -193,7 +196,8 @@ int main(int argc, char **argv) {
         }
         printf("loading %s %s\n", name.c_str(), argv[i]);
         app.load(name, argv[i]);
-    }
+    }*/
+    for(int i = 1; i < argc; ++i) app.load_scene(argv[i]);
     // app.load_beatmap("2.beatmap");
     app.main_loop();
 }

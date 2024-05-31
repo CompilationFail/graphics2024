@@ -42,6 +42,21 @@ std::string unescape(const char *str) {
     return output;
 }
 
+
+bool readfloat(const char *str, float *dst, const char *arg) {
+    if(sscanf(str, "%f", dst) != 1) {
+        warn(2, "While parsing %s : Expected 1 float, finds: %s", arg, str);
+        return 0;
+    }
+    return 1;
+}
+bool readint(const char *str, int*dst, const char *arg) {
+    if(sscanf(str, "%d", dst) != 1) {
+        warn(2, "While parsing %s : Expected 1 integer, finds: %s", arg, str);
+        return 0;
+    }
+    return 1;
+}
 bool readvec3(const char *str, glm::vec3 *dst, const char *arg) {
     if(sscanf(str, "%f%f%f", &dst -> x, &dst -> y, &dst -> z) != 3) {
         warn(2, "While parsing %s : Expected 3 floats, finds: %s", arg, str);
@@ -94,4 +109,9 @@ void _CheckGLError(const char* file, int line)
 
 void uniform_vec3(GLint loc, glm::vec3 vec) {
     glUniform3f(loc, vec.x, vec.y, vec.z);
+}
+
+char *nspace(char *ptr) {
+    while(*ptr && isspace(*ptr)) ptr++;
+    return ptr;
 }

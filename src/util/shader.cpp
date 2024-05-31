@@ -471,8 +471,8 @@ vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light
             if(lpos.z > depth + bias) return vec3(0);
         }
     }
-
-        
+    // return vec3(1,1,1);
+ 
     // cone light
     if(light_type == 1 && dot(-light_direction, i) < 0.7) {
         return vec3(0);

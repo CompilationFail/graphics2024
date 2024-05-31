@@ -1,4 +1,5 @@
 #include "scene.hpp"
+#include <stack>
 
 Scene::Scene()
     : shadow(0), depth_buffer(0) {}
@@ -102,11 +103,127 @@ void Scene::render_depth_buffer() {
 }
 
 
+struct MeshInfo {
+    std::string name;
+    Path path;
+    glm::vec3 scale, translate;
+    MeshInfo() : name(""), path(""), scale(1), translate(0)
+    {
+    }
+};
 
 void Scene::load(Path path) {
-    ;
-    ;
-    ;
-    ;
-    ;
+    int type = 0;
+    void *ptr;
+    printf("Scene: Load from %s\n", path.u8string().c_str());
+    clock_t begin_time = clock();
+    auto filename = path.filename().u8string();
+    FILE *f = fopen(path.u8string().c_str(), "r");
+    if(f == nullptr) 
+        throw "fail to open file";
+    if(filename.size() < 6 || filename.substr(filename.size() - 6, 6) != ".scene") 
+        warn(2, "%s: not a .scene file", filename.c_str());
+    static char buf[BUFFLEN];
+    std::stack <std::pair <void *, int> > stk; 
+    auto fmte = [&](char *str = nullptr) {
+        while(!stk.empty()) {
+            if(stk.top().second <= 1) {
+                delete stk.top().first;
+            }
+            stk.pop();
+        }
+        throw std::string("Format error") + str;
+    };
+    while(std::fgets(buf, BUFFLEN, f) != nullptr) {
+        size_t len = strlen(buf);
+        while(len && isspace(buf[len - 1])) buf[--len] = 0;
+        if(len == BUFFLEN) warn(3, "%s: Line length exceeded bufflen", filename.c_str());
+        char *pos = strstr(buf, "#");
+        if(pos != nullptr) *pos = '\0';
+        pos = nspace(buf), len = strlen(pos);
+        if(len <= 1) continue;
+        if(str_equal(pos, "mesh")) {
+            stk.push(std::make_pair(new MeshInfo, 0));
+        } else if(str_equal(pos, "name")) {
+            if(stk.empty()) fmte();
+            pos = nspace(pos + 5);
+            if(stk.top().second == 0) ((MeshInfo*)stk.top().first) -> name = pos;
+        } else if(str_equal(pos, "path")) {
+            if(stk.empty()) fmte();
+            pos = nspace(pos + 5);
+            if(stk.top().second == 0) ((MeshInfo*)stk.top().first) -> path = pos;
+        } else if(str_equal(pos, "translate")) {
+            if(stk.empty()) fmte();
+            pos = nspace(pos + 9);
+            if(stk.top().second == 0) {
+                readvec3(pos, &(((MeshInfo*)stk.top().first) -> translate), "mesh.translate");
+            }
+        } else if(str_equal(pos, "scale")) {
+            if(stk.empty()) fmte();
+            pos = nspace(pos + 5);
+            if(stk.top().second == 0) {
+                readvec3(pos, &(((MeshInfo*)stk.top().first) -> scale), "mesh.scale");
+            }
+        } else if(str_equal(pos, "light")) {
+            stk.push(std::make_pair(new LightInfo, 1));
+        } else if(str_equal(pos, "camera")) {
+            if(stk.empty() || stk.top().second != 1) fmte();
+            stk.push(std::make_pair(&(((LightInfo*)stk.top().first) -> camera), 2));
+        } else if(str_equal(pos, "pos")) {
+            if(stk.empty()) fmte();
+            pos = nspace(pos + 3);
+            if(stk.top().second == 2) {
+                readvec3(pos, &(((Camera*)stk.top().first) -> position), "camera.pos");
+            }
+        } else if(str_equal(pos, "pitch")) {
+            if(stk.empty()) fmte();
+            pos = nspace(pos + 5);
+            if(stk.top().second == 2) {
+                readfloat(pos, &(((Camera*)stk.top().first) -> pitch), "camera.pitch");
+            }
+        } else if(str_equal(pos, "yaw")) {
+            if(stk.empty()) fmte();
+            pos = nspace(pos + 3);
+            if(stk.top().second == 2) {
+                readfloat(pos, &(((Camera*)stk.top().first) -> yaw), "camera.yaw");
+            }
+        } else if(str_equal(pos, "intense")) {
+            if(stk.empty()) fmte();
+            pos = nspace(pos + 7);
+            if(stk.top().second == 1) {
+                readvec3(pos, &(((LightInfo*)stk.top().first) -> intense), "light.intense");
+            }
+        } else if(str_equal(pos, "type")) {
+            if(stk.empty()) fmte();
+            pos = nspace(pos + 4);
+            if(stk.top().second == 1) {
+                int x = 0;
+                readint(pos, &x,  "light.type");
+                if(x < 0 || x > 2) fmte("light.type: 0 ~ 2");
+                ((LightInfo*)stk.top().first) -> type = LightType(x);
+            }
+        } else if(str_equal(pos, "end")) {
+            if(stk.empty()) fmte("unmatched end");
+            switch(stk.top().second) {
+                case 2: {
+                    stk.pop();
+                    break;
+                }
+                case 1: {
+                    light_info.push_back(*(LightInfo*)(stk.top().first));
+                    delete stk.top().first;
+                    stk.pop();
+                    break;
+                }
+                case 0: {
+                    auto info = (MeshInfo*)stk.top().first;
+                    load_mesh(info->name, info->path);
+                    _model[info->name] = {glm::translate(glm::mat4(1.f), info->translate) * glm::scale(glm::mat4(1.f), info->scale)};
+                    delete stk.top().first;
+                    stk.pop();
+                    break;
+                }
+            }
+        }
+    }
 }
