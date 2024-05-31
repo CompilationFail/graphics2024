@@ -15,7 +15,7 @@ using Path = fs::path;
 
 static const size_t BUFFLEN = 1000;
 static const int WARNING_LEVEL = 0;
-const float PI = acos(-1);
+const float PI = acos(-1.f);
 
 template<typename ... Args>
 void warn(int level, const char *format, Args ... args) {

@@ -6,10 +6,10 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <string>
 
-float roughness = 0.3;
-float metallic = 0.6;
+float roughness = 0.3f;
+float metallic = 0.6f;
 
-float debug_x, debug_y = -1, debug_z;
+float debug_x, debug_y = -1.f, debug_z;
 /*float particle_size = 1.5;
 float rot_speed = 1;
 int particle_number = 4e4; */
@@ -78,8 +78,8 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
             double dy = (ypos - l_ypos) * angle_stride * mouse_sensitivity;
 
             if(camera) {
-                camera -> pitch -= dy;
-                camera -> yaw += dx;
+                camera -> pitch -= (float)dy;
+                camera -> yaw += (float)dx;
             }
         }
         l_xpos = xpos, l_ypos = ypos;
@@ -145,7 +145,7 @@ void ui() {
 }
 
 void init_control(GLFWwindow *window) {
-    camera_cnt = lights.size() + 1;
+    camera_cnt = (int)lights.size() + 1;
     cameras[0] = Control::camera = &camera;
     for(int i = 1; i < camera_cnt; ++i) cameras[i] = &lights[i-1].camera;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -174,8 +174,8 @@ void control_update_frame(double now) {
     static float fps_last = 0;
     fps_counter++;
     if(now - fps_last > 0.1) {
-        Control::fps = fps_counter / (now - fps_last);
-        fps_last = now;
+        Control::fps = float(fps_counter / (now - fps_last));
+        fps_last = (float)now;
         fps_counter = 0;
     }
     Control::update(now);

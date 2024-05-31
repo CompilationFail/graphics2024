@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "mesh.hpp"
 #include "glm/geometric.hpp"
 #include <stb_image.h>

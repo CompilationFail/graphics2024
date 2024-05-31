@@ -22,8 +22,7 @@ glm::vec3 Camera::dir4(int d) {
     if(d == 0) return dir();
     if(d == 2) return -dir();
     if(d == 1) return -right();
-    if(d == 3) return right();
-    assert(0);
+    return right();
 }
 glm::mat4 Camera::view() {
     return glm::lookAt(position, position + dir(), up());

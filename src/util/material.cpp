@@ -1,16 +1,18 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "material.hpp"
 #include <iostream>
 
+
 Material::Material() : Ns(7),
-                       Ka(0, 0, 0),
-                       Kd(0, 0, 0),
-                       Ks(1, 1, 1),
-                       Ke(0, 0, 0),
+                       Ka(0),
+                       Kd(0),
+                       Ks(1),
+                       Ke(0),
                        illum(1),
-                       texture_scale(1, 1, 1),
-                       texture_normal_scale(1, 1, 1),
-                       metallic(0.5),
-                       roughness(0.5), ao(0.1) { }
+                       texture_scale(1),
+                       texture_normal_scale(1),
+                       metallic(0.5f),
+                       roughness(0.5f), ao(0.1f) { }
 
 void Material::verify() {
     Ns = std::clamp(Ns, 0.f, 1000.f);

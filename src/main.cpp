@@ -120,7 +120,7 @@ public:
         std::sort(beatmap.begin(), beatmap.end());
         puts("init draw");
         scene->init_draw();
-        scene->model()["robot"] = {glm::translate(glm::mat4(1.f), glm::vec3(0.7f, -1.f, 0.7f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.01))};
+        scene->model()["robot"] = {glm::translate(glm::mat4(1.f), glm::vec3(0.7f, -1.f, 0.7f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.01f))};
         scene->activate_shadow();
         puts("Enter main loop");
         auto last = glfwGetTime();
