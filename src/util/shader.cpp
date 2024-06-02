@@ -467,11 +467,10 @@ vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light
             float depth = texture(depth_map, lpos.xy).r;
             // return vec3(lpos.x, lpos.y, lpos.z);
             // depth / 10.0);
-            float bias = max(0.01 * (1.0 - dot(n, i)), 0.001) * 0.5; 
+            float bias = max((1.0 - dot(n, i)) * r, 1) / 3000; 
             if(lpos.z > depth + bias) return vec3(0);
         }
     }
-    // return vec3(1,1,1);
  
     // cone light
     if(light_type == 1 && dot(-light_direction, i) < 0.7) {
@@ -507,7 +506,7 @@ void main() {
     float roughness = m_roughness;
     vec3 normal = o_norm;
     vec3 pos = o_pos;
-    
+
     if(has_tex == 1) {
         vec3 color = texture(tex, scale_uv(o_uv, tex_scale)).rgb;
         albedo = pow(color, vec3(2.2));
