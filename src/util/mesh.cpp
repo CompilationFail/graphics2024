@@ -1,3 +1,4 @@
+#include "shader.hpp"
 #define _CRT_SECURE_NO_WARNINGS
 #include "mesh.hpp"
 #include "glm/geometric.hpp"
@@ -144,7 +145,8 @@ Mesh::Mesh(const Path &path) {
     }
     printf("Obj loaded, time: %lfs\n", 1. * (clock() - begin_time) / CLOCKS_PER_SEC);
     try {
-        shader = std::make_unique <PBRShader> ();
+        shader1 = std::make_unique <SSDO> (1);
+        shader2 = std::make_unique <SSDO> (2);
     } catch (std::string msg) {
         warn(2, "[ERROR] Fail to load shader program: %s", msg.c_str());
         exit(1);
@@ -220,7 +222,8 @@ void Mesh::init_draw() {
 }
 void Mesh::draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera,
                 std::vector<LightInfo> light_info,
-                std::vector<GLuint> depth_map) {
+                std::vector<GLuint> depth_map, int render_pass) {
+    auto &shader = render_pass == 0 ? shader1 : shader2;
     shader -> use();
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     shader->set_light(light_info);
@@ -250,7 +253,8 @@ Mesh::Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 co
     vertices.emplace_back(c, glm::vec2(0), normal);
     objects.emplace_back(std::string("triangle"), std::vector<uint32_t>{0,1,2}, material);
     try {
-        shader = std::make_unique <PBRShader> ();
+        shader1 = std::make_unique <SSDO> (1);
+        shader2 = std::make_unique <SSDO> (2);
     } catch (std::string msg) {
         warn(2, "[ERROR] Fail to load shader program: %s", msg.c_str());
         exit(1);

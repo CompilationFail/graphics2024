@@ -12,9 +12,15 @@ public:
     std::vector <std::pair <std::string, std::unique_ptr<Mesh>>> meshes;
     int shadow;
     static const int depth_map_width = 1000, depth_map_height = 1000;
-    // shadow mapping are used to render directional light.
+    
+    // shadow mapping are used to calculate DI visibility
     GLuint depth_buffer;
     std::vector <GLuint> depth_map;
+
+    int width, height;
+    // Geometry Buffer for first pass
+    GLuint buffer, depth, normal, color;
+
     std::unique_ptr <DepthShader> depth_shader;
     std::vector <LightInfo> light_info;
     void render_depth_buffer();
@@ -26,7 +32,7 @@ public:
     }
     void load(Path path);
     std::map <std::string, std::vector<glm::mat4>> &model();
-    void init_draw();
+    void init_draw(int width, int height);
     void activate_shadow();
     void update_light(std::vector <LightInfo> info);
     void render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera);

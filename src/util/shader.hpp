@@ -73,3 +73,21 @@ public:
     void set_camera(glm::vec3 camera);
     void set_depth(std::vector <GLuint> depth_map);
 };
+
+class SSDO: public Shader {
+    GLint model, vp, vp_inv, scale, norm_scale,
+        has_tex, has_tex_norm, camera,
+        light_position, light_intense, light_direction, light_vp, light_type, light_cnt,
+        depth_map, tex, tex_norm, has_depth_map,
+        m_albedo, m_metallic, m_roughness, m_ao,
+        normal, depth, color;
+
+public:
+    SSDO(int render_pass);
+    void set_mvp(glm::mat4 model, glm::mat4 vp);
+    void set_material(Material *material);
+    void set_light(std::vector <LightInfo> light_info);
+    void set_camera(glm::vec3 camera);
+    void set_depth(std::vector <GLuint> depth_map);
+    void set_render_pass(int pass);
+};

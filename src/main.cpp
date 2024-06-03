@@ -71,7 +71,7 @@ public:
             glm::vec3(20),
             POINT_LIGHT,
         });*/
-        window = window_init(width, height, "wheel chair player");
+        window = window_init(width, height, "test");
         glew_init();
         model = glm::mat4(1.f);
         init_control(window);
@@ -119,7 +119,7 @@ public:
     void main_loop() {
         std::sort(beatmap.begin(), beatmap.end());
         puts("init draw");
-        scene->init_draw();
+        scene->init_draw(width, height);
         scene->model()["robot"] = {glm::translate(glm::mat4(1.f), glm::vec3(0.7f, -1.f, 0.7f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.01f))};
         scene->activate_shadow();
         puts("Enter main loop");

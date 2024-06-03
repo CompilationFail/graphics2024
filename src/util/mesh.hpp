@@ -62,7 +62,7 @@ public:
     std::unique_ptr <MaterialLib> mtl;
     std::map <VertexIndices, uint32_t> mp;
     GLuint vertex_buffer;
-    std::unique_ptr <PBRShader> shader;
+    std::unique_ptr <SSDO> shader1, shader2;
     // std::unique_ptr <PhongShader> shader;
     Mesh() { }
     ~Mesh() {
@@ -71,7 +71,7 @@ public:
             printf("Delete vertex buffer: %d\n", vertex_buffer);
         }
         printf("Delete program\n");
-        shader = nullptr;
+        shader1 = nullptr, shader2 = nullptr;
     }
     /*
      * Load from a [.obj] file
@@ -84,7 +84,7 @@ public:
     void init_draw();
     void draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera,
               std::vector<LightInfo> light_info,
-              std::vector<GLuint> depth_map);
+              std::vector<GLuint> depth_map, int render_pass);
     void draw_depth() const;
     Bound bound();
     void apply_transform(glm::mat4);
