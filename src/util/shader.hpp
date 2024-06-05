@@ -90,4 +90,5 @@ public:
     void set_camera(glm::vec3 camera);
     void set_depth(std::vector <GLuint> depth_map);
     void set_render_pass(int pass);
+    void set_geo(GLuint depth, GLuint normal, GLuint color);
 };

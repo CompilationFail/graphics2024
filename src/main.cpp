@@ -71,7 +71,7 @@ public:
             glm::vec3(20),
             POINT_LIGHT,
         });*/
-        window = window_init(width, height, "test");
+        window = window_init(width, height, "SSDO_test");
         glew_init();
         model = glm::mat4(1.f);
         init_control(window);
@@ -120,13 +120,13 @@ public:
         std::sort(beatmap.begin(), beatmap.end());
         puts("init draw");
         scene->init_draw(width, height);
-        scene->model()["robot"] = {glm::translate(glm::mat4(1.f), glm::vec3(0.7f, -1.f, 0.7f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.01f))};
+        // scene->model()["robot"] = {glm::translate(glm::mat4(1.f), glm::vec3(0.7f, -1.f, 0.7f)) * glm::scale(glm::mat4(1.f), glm::vec3(0.01f))};
         scene->activate_shadow();
         puts("Enter main loop");
         auto last = glfwGetTime();
         int frame_count = 0;
         while (!glfwWindowShouldClose(window)) {
-            scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(debug_x, debug_y, debug_z))};
+            // scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(debug_x, debug_y, debug_z))};
             /*for(auto &[x,y]: scene -> meshes) if(x == "ground") {
                 for(auto m: y->mtl->materials) {
                     m->roughness = roughness;

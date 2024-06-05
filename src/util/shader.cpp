@@ -728,7 +728,8 @@ uniform float m_metallic;
 uniform float m_roughness;
 uniform float m_ao;
 
-out vec4 frag_color[2];
+layout(location = 0) out vec3 frag_color;
+layout(location = 1) out vec3 frag_depth;
 
 float PI = 3.14159265;
 vec2 scale_uv(vec2 uv, vec3 scale) {
@@ -784,7 +785,7 @@ vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light
             float depth = texture(depth_map, lpos.xy).r;
             // return vec3(lpos.x, lpos.y, lpos.z);
             // depth / 10.0);
-            float bias = max((1.0 - dot(n, i)) * r, 1) / 3000; 
+            float bias = max((1.0 - dot(n, i)) * sqrt(r), 1) / 3000; 
             if(lpos.z > depth + bias) return vec3(0);
         }
     }
@@ -838,7 +839,7 @@ void main() {
         normal = tmp;
     }
     
-    frag_color[1] = vec4((normal + vec3(1)) / 2, 1);
+    frag_depth = (normal + vec3(1)) / 2;
     
     vec3 color = vec3(0);
     int i = 0;
@@ -847,7 +848,7 @@ void main() {
             normal, pos, albedo, metallic, roughness);
     }
 
-    frag_color[0] = vec4(color, 1);
+    frag_color = color;
 }
 )";
 
@@ -895,6 +896,15 @@ out vec4 frag_color;
 vec2 scale_uv(vec2 uv, vec3 scale) {
     return vec2(uv.x / scale.x, uv.y / scale.y);
 }
+vec3 decw(vec4 p) {
+    return p.xyz / p.w;
+}
+vec3 world2screen(vec3 p) {
+    return (decw(vp * vec4(p, 1)) + vec3(1)) / 2;
+}
+vec3 screen2world(vec3 p) {
+    return decw(vp_inv * vec4(p * 2 - vec3(1), 1));
+}
 
 float PI = 3.14159265;
 
@@ -927,12 +937,10 @@ float G_Smith(vec3 n, vec3 v, vec3 i, float roughness) {
     return G_SchlickGGX(max(0., dot(n, v)), roughness) * G_SchlickGGX(max(0., dot(n,i)), roughness);
 }
 
-vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light_vp, int light_type, sampler2D depth_map, 
-    vec3 n, vec3 pos, vec3 albedo, float metallic, float roughness) {
-    
+vec3 L(vec3 light_position, vec3 light_normal, vec3 light_intense, vec3 n, vec3 pos, vec3 albedo, float metallic, float roughness) {
+    // pixel rect light
     vec3 i = light_position - pos;
     float r = dot(i, i);
-    if(light_type == 2) i = -light_direction;
     i = normalize(i);
     
     vec3 v = normalize(camera - pos);
@@ -940,30 +948,11 @@ vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light
 
     float theta = dot(i, n);
     if(theta <= 0) return vec3(0);
-    
-    if(has_depth_map != 0) {
-        vec4 lpos_w = light_vp * vec4(pos, 1);
-        vec3 lpos = (lpos_w.xyz / lpos_w.w + vec3(1)) / 2;
-        if(lpos.x >= 0 && lpos.x < 1 && lpos.y >= 0 && lpos.y < 1 && lpos.z >= 0 && lpos.z < 1) {
-            float depth = texture(depth_map, lpos.xy).r;
-            // return vec3(lpos.x, lpos.y, lpos.z);
-            // depth / 10.0);
-            float bias = max((1.0 - dot(n, i)) * r, 1) / 3000; 
-            if(lpos.z > depth + bias) return vec3(0);
-        }
-    }
- 
-    // cone light
-    if(light_type == 1 && dot(-light_direction, i) < 0.7) {
-        return vec3(0);
-    }
-    // point light
-    vec3 radiance = light_intense / r;
 
-    if(light_type == 2) {
-        // directional light
-        radiance = light_intense;
-    }
+    float theta2 = dot(light_normal, -i);
+    if(theta <= 0) return vec3(0);
+    
+    vec3 radiance = light_intense / r * theta2;
 
     vec3 F0 = vec3(0.04); 
     F0      = mix(F0, albedo, metallic);
@@ -978,7 +967,42 @@ vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light
     vec3 specular = (F * D * G) / (4.0 * max(dot(n, v), 0.0) * max(dot(n, i), 0.0) + 0.0001);
     specular = specular * radiance * theta;
 
-    return specular + diffuse;
+    float As = 1000;
+    return (specular + diffuse) * As;
+}
+
+float random (vec2 uv) {
+    return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
+}
+
+int N = 20;
+vec3 sampleHemisphereCosine(vec3 normal, vec2 seed1, vec2 seed2) {
+    // Generate two random numbers
+    float u1 = random(seed1);
+    float u2 = random(seed2);
+
+    // Convert to spherical coordinates
+    float theta = acos(sqrt(u1));
+    float phi = 2.0 * PI * u2;
+
+    // Convert to Cartesian coordinates
+    float x = sin(theta) * cos(phi);
+    float y = sin(theta) * sin(phi);
+    float z = cos(theta);
+
+    // Create a sample direction in local space
+    vec3 sampleDir = vec3(x, y, z);
+
+    // Transform the sample direction to world space using the normal
+    vec3 up = vec3(0.0, 0.0, 1.0); // Or any other vector that is not parallel to the normal
+    if (abs(normal.z) > 0.999) {
+        up = vec3(1.0, 0.0, 0.0);
+    }
+    vec3 tangent = normalize(cross(up, normal));
+    vec3 bitangent = cross(normal, tangent);
+    vec3 worldSampleDir = tangent * sampleDir.x + bitangent * sampleDir.y + normal * sampleDir.z;
+
+    return normalize(worldSampleDir);
 }
 
 void main() {
@@ -987,6 +1011,20 @@ void main() {
     float roughness = m_roughness;
     vec3 normal = o_norm;
     vec3 pos = o_pos;
+    vec3 pos_screen = world2screen(pos);
+    
+    // normal = texture(geo_normal, pos_screen.xy).rgb * 2 - 1;
+    // frag_color = vec4((normal + 1) / 2, 1);
+    // frag_color = vec4((pos_screen.z - 0.8) * 3);
+    // pos = screen2world(pos_screen);
+    // frag_color = vec4(pos / 3 + 0.5, 1);
+    // return;
+    
+
+    if(texture(geo_depth, pos_screen.xy).r * (1 + 1e-3) < pos_screen.z) {
+        frag_color = vec4(pos_screen.z / 4);
+        return;
+    }
 
     if(has_tex == 1) {
         vec3 color = texture(tex, scale_uv(o_uv, tex_scale)).rgb;
@@ -1002,17 +1040,34 @@ void main() {
         normal = tmp;
     }
     
-    vec3 ambient = light_intense[0] * m_ao * albedo * 0.002;
-    // ambient = vec3(0);
-    
-    vec3 di = vec3(0); // Direct Illumination
+    vec3 di = texture(geo_color, pos_screen.xy).rgb; // Direct Illumination
+    vec3 ind = vec3(0);
     int i = 0;
-    for(; i < light_cnt; ++i) {
-        di += L(light_position[i], light_direction[i], light_intense[i], light_vp[i], light_type[i], depth_map[i],
-            normal, pos, albedo, metallic, roughness);
+    int rmax = 4;
+    for(i = 0; i < N; ++i) {
+        vec3 dir = sampleHemisphereCosine(normal, pos_screen.xy + vec2(i + 1, 0), pos_screen.xy + vec2(0, i + 1));
+        if(dot(dir, normal) < 1e-4) continue;
+        float r = 0.001 + (rmax - 0.001) * random(pos_screen.xy + vec2(i + 1, i + 1));
+        vec3 p = pos + r * dir;
+        vec3 p_screen = world2screen(p);
+        if(p_screen.x < 0 || p_screen.x >= 1 || p_screen.y < 0 || p_screen.y >= 1) 
+            continue;
+        float z = texture(geo_depth, p_screen.xy).r;
+        // float bias = max(length(p), 1) / 3000; 
+        if(z + 1e-3 < p_screen.z) {
+            p_screen.z = z;
+            p = screen2world(p);
+            vec3 p_normal = texture(geo_normal, p_screen.xy).rgb * 2 - 1;
+            vec3 p_color = texture(geo_color, p_screen.xy).rgb;
+            // ind = N * (p / 3 + 0.5);
+            ind += L(p, p_normal, p_color, normal, pos, albedo, metallic, roughness);
+            // = p_color * N;
+        }
     }
 
-    vec3 color = di + ambient;
+    ind /= N;
+
+    vec3 color = di + ind;
 
     // Gamma correction
     color = color / (color + vec3(1.0));
@@ -1021,8 +1076,6 @@ void main() {
     frag_color = vec4(color, 1);
 }
 )";
-
-
 }
 
 SSDO::SSDO(int render_pass): Shader(SSDO_text::vert, render_pass == 1 ? SSDO_text::frag1 : SSDO_text::frag2) {
@@ -1136,13 +1189,24 @@ void SSDO::set_depth(std::vector <GLuint> map) {
         glUniform1i(has_depth_map, 1);
         int n = map.size();
         std::vector <int> tmp(n);
-        for(int i = 0; i < n; ++i) tmp[i] = i + 2;
+        for(int i = 0; i < n; ++i) tmp[i] = i + 5;
         glUniform1iv(depth_map, n, (GLint*)tmp.data());
         for(int i = 0; i < n; ++i) {
-            glActiveTexture(GL_TEXTURE0 + 2 + i);
+            glActiveTexture(GL_TEXTURE0 + 5 + i);
             CheckGLError();
             glBindTexture(GL_TEXTURE_2D, map[i]);
             CheckGLError();
         }
     }
+}
+void SSDO::set_geo(GLuint d, GLuint n, GLuint c) {
+    glUniform1i(depth, 2);
+    glUniform1i(normal, 3);
+    glUniform1i(color, 4);
+    glActiveTexture(GL_TEXTURE0 + 2);
+    glBindTexture(GL_TEXTURE_2D, d);
+    glActiveTexture(GL_TEXTURE0 + 3);
+    glBindTexture(GL_TEXTURE_2D, n);
+    glActiveTexture(GL_TEXTURE0 + 4);
+    glBindTexture(GL_TEXTURE_2D, c);
 }

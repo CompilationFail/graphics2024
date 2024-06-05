@@ -222,7 +222,8 @@ void Mesh::init_draw() {
 }
 void Mesh::draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera,
                 std::vector<LightInfo> light_info,
-                std::vector<GLuint> depth_map, int render_pass) {
+                std::vector<GLuint> depth_map, int render_pass,
+                GLuint depth, GLuint normal, GLuint color) {
     auto &shader = render_pass == 0 ? shader1 : shader2;
     shader -> use();
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -230,6 +231,7 @@ void Mesh::draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera,
     shader->set_camera(camera);
     shader->set_mvp(model, vp);
     shader->set_depth(depth_map);
+    shader->set_geo(depth, normal, color);
     for(const auto &object: objects) {
         shader->set_material(object.material());
         // printf("%s %p\n", object.c_name(), object.material());

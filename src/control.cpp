@@ -104,7 +104,7 @@ void ui() {
     ImGui::NewFrame();
 
     if (ui_window) {
-        ImGui::Begin("Venus", &ui_window);
+        ImGui::Begin("SSDO_test", &ui_window);
         ImGui::Text("FPS: %f", fps);
         ImGui::Text("pitch: %.03f, yaw: %.03f", camera->pitch, camera->yaw);
         ImGui::Text("camera position:(%.03f,%.03f,%.03f)", camera->position.x, camera->position.y, camera->position.z);

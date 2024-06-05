@@ -47,7 +47,7 @@ void Scene::init_draw(int _width, int _height) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, normal, 0);
-    GLuint buffers[2] = {color,normal};
+    GLuint buffers[2] = {GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1};
     glDrawBuffers(2, buffers);
     glReadBuffer(GL_NONE);
     CheckGLError();
@@ -106,7 +106,7 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
 
     glViewport(0, 0, width, height);
     CheckGLError();
-    glClearColor(0., 0., 0., 1.);
+    glClearColor(0.5, 0.5, 0.5, 1.);
     CheckGLError();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     CheckGLError();
@@ -116,10 +116,10 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
     CheckGLError();
     for(auto &[name, mesh]: meshes) {
         if(!_model.count(name)) {
-            mesh->draw(glm::mat4(1.f), vp, camera, light_info, depth_map, 1);
+            mesh->draw(glm::mat4(1.f), vp, camera, light_info, depth_map, 1, depth, normal, color);
         } else {
             for(auto model: _model[name]) {
-                mesh->draw(model, vp, camera, light_info, depth_map, 1);
+                mesh->draw(model, vp, camera, light_info, depth_map, 1, depth, normal, color);
             }
         }
         // mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_info, depth_map);

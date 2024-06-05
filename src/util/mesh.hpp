@@ -83,8 +83,9 @@ public:
     Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 color);
     void init_draw();
     void draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera,
-              std::vector<LightInfo> light_info,
-              std::vector<GLuint> depth_map, int render_pass);
+              std::vector<LightInfo> light_info, std::vector<GLuint> depth_map,
+              int render_pass, 
+              GLuint depth = 0, GLuint normal = 0, GLuint color = 0);
     void draw_depth() const;
     Bound bound();
     void apply_transform(glm::mat4);

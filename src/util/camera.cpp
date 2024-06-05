@@ -37,7 +37,7 @@ glm::mat4 LightInfo::vp() {
         return glm::perspective(fov, aspect_ratio, .1f, 100.f) *
              camera.view();
     } else {
-        static const float L = 100.f;
+        static const float L = 10.f;
         return glm::ortho(-L, L, -L, L, .1f, 100.f) *
              camera.view();
     }
