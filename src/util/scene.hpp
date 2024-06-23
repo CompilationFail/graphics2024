@@ -11,7 +11,7 @@ public:
     std::map <std::string, std::vector <glm::mat4>> _model;
     std::vector <std::pair <std::string, std::unique_ptr<Mesh>>> meshes;
     int shadow;
-    static const int depth_map_width = 2000, depth_map_height = 2000;
+    static const int depth_map_width = 1000, depth_map_height = 1000;
     
     // shadow mapping are used to calculate DI visibility
     GLuint depth_buffer;
