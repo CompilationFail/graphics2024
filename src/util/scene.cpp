@@ -16,8 +16,8 @@ void Scene::init_draw(int _width, int _height) {
     glGenFramebuffers(1, &buffer);
     glGenTextures(1, &depth);
     glBindTexture(GL_TEXTURE_2D, depth);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depth_map_width,
-                 depth_map_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width,
+                 height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -26,7 +26,7 @@ void Scene::init_draw(int _width, int _height) {
     glGenFramebuffers(1, &normal);
     glGenTextures(1, &normal);
     glBindTexture(GL_TEXTURE_2D, normal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_map_width, depth_map_height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
                  GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -36,7 +36,7 @@ void Scene::init_draw(int _width, int _height) {
     glGenFramebuffers(1, &color);
     glGenTextures(1, &color);
     glBindTexture(GL_TEXTURE_2D, color);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, depth_map_width, depth_map_height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
                  GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -106,7 +106,7 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
 
     glViewport(0, 0, width, height);
     CheckGLError();
-    glClearColor(0.5, 0.5, 0.5, 1.);
+    glClearColor(0.0, 0.0, 0.0, 1.);
     CheckGLError();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     CheckGLError();

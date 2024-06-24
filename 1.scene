@@ -12,6 +12,7 @@ mesh
     translate 0 -1 0
 end
 
+# directional light
 light
     camera
         pitch -0.584
@@ -22,6 +23,7 @@ light
     type 2
 end
 
+# point light
 light 
     camera
         pitch -0.584

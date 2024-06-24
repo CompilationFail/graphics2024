@@ -785,7 +785,7 @@ vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light
             float depth = texture(depth_map, lpos.xy).r;
             // return vec3(lpos.x, lpos.y, lpos.z);
             // depth / 10.0);
-            float bias = max((1.0 - dot(n, i)) * sqrt(r), 1) / 3000; 
+            float bias = max((1.0 - dot(n, i)) * sqrt(r), 1) * 1e-4; 
             if(lpos.z > depth + bias) return vec3(0);
         }
     }
@@ -950,7 +950,7 @@ vec3 L(vec3 light_position, vec3 light_normal, vec3 light_intense, vec3 n, vec3 
     if(theta <= 0) return vec3(0);
 
     float theta2 = dot(light_normal, -i);
-    if(theta <= 0) return vec3(0);
+    if(theta2 <= 0) return vec3(0);
     
     vec3 radiance = light_intense / r * theta2;
 
@@ -975,7 +975,7 @@ float random (vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-int N = 20;
+int N = 50;
 vec3 sampleHemisphereCosine(vec3 normal, vec2 seed1, vec2 seed2) {
     // Generate two random numbers
     float u1 = random(seed1);
@@ -1047,7 +1047,7 @@ void main() {
     for(i = 0; i < N; ++i) {
         vec3 dir = sampleHemisphereCosine(normal, pos_screen.xy + vec2(i + 1, 0), pos_screen.xy + vec2(0, i + 1));
         if(dot(dir, normal) < 1e-4) continue;
-        float r = 0.001 + (rmax - 0.001) * random(pos_screen.xy + vec2(i + 1, i + 1));
+        float r = 0.01 + (rmax - 0.01) * max(0, random(pos_screen.xy + vec2(i + 1, i + 1)));
         vec3 p = pos + r * dir;
         vec3 p_screen = world2screen(p);
         if(p_screen.x < 0 || p_screen.x >= 1 || p_screen.y < 0 || p_screen.y >= 1) 
@@ -1067,7 +1067,7 @@ void main() {
 
     ind /= N;
 
-    vec3 color = di + ind;
+    vec3 color =  ind * 4;
 
     // Gamma correction
     color = color / (color + vec3(1.0));
