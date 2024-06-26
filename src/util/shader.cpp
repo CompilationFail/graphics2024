@@ -778,17 +778,31 @@ vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light
     float theta = dot(i, n);
     if(theta <= 0) return vec3(0);
     
+    float vis = 1; 
     if(has_depth_map != 0) {
         vec4 lpos_w = light_vp * vec4(pos, 1);
         vec3 lpos = (lpos_w.xyz / lpos_w.w + vec3(1)) / 2;
         if(lpos.x >= 0 && lpos.x < 1 && lpos.y >= 0 && lpos.y < 1 && lpos.z >= 0 && lpos.z < 1) {
-            float depth = texture(depth_map, lpos.xy).r;
-            // return vec3(lpos.x, lpos.y, lpos.z);
-            // depth / 10.0);
+            vec2 step = 1.0 / textureSize(depth_map, 0);
+            int L = 3;
+            float w = 0, s = 0;
             float bias = max((1.0 - dot(n, i)) * sqrt(r), 1) * 1e-4; 
-            if(lpos.z > depth + bias) return vec3(0);
+            for(int i = -L; i <= L; ++i) {
+                for(int j = -L; j <= L; ++j) {
+                    vec2 p = lpos.xy + vec2(step.x * i, step.y * j);
+                    if(p.x < 0 || p.x >= 1 || p.y < 0 || p.y >= 1) continue;
+                    float d = sqrt(i * i + j * j);
+                    float wi = 1 / (1 + d * d);
+                    w += wi;
+                    if(lpos.z <= texture(depth_map, p).r + bias * (1 + d)) {
+                        s += wi;
+                    }
+                }
+            }
+            vis = 1.0 * s / w;
         }
     }
+    if(vis <= 0) return vec3(0);
  
     // cone light
     if(light_type == 1 && dot(-light_direction, i) < 0.7) {
@@ -815,7 +829,7 @@ vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light
     vec3 specular = (F * D * G) / (4.0 * max(dot(n, v), 0.0) * max(dot(n, i), 0.0) + 0.0001);
     specular = specular * radiance * theta;
 
-    return specular + diffuse;
+    return vis * (specular + diffuse);
 }
 
 void main() {
@@ -975,7 +989,7 @@ float random (vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-int N = 1500;
+int N = 300;
 vec3 sampleHemisphereCosine(vec3 normal, vec2 seed1, vec2 seed2) {
     // Generate two random numbers
     float u1 = random(seed1);
@@ -1180,15 +1194,18 @@ void main() {
             vec2 d = (vec2(x, y) - pos_screen.xy) / step;
             float wi = 1 / (1 + dot(d, d));
             w += wi;
-            s += wi * texture(geo_normal, vec2(x, y)).rgb; // ssdo indirect light
-            vec3 now=texture(geo_normal, vec2(x, y)).rgb;
-            for(int i=0;i<3;++i)mi[i]=min(mi[i],now[i]),mx[i]=max(mx[i],now[i]);
+            vec3 color = texture(geo_normal, vec2(x, y)).rgb;
+            s += wi * color; // ssdo indirect light
+            mi = min(mi, color);
+            mx = max(mx, color);
         }
     }
-    for(int i=0;i<3;++i)ind[i]=mi[i]+random(pos_screen.xy) * (mx[i]-mi[i]);
-    ind=ind/5+s/w;
+    for(int i = 0; i < 3; ++i) {
+        ind[i] = mi[i] + random(pos_screen.xy) * (mx[i] - mi[i]);
+    }
+    ind = ind / 5 + s / w;
     // ind = s / w;
-    vec3 color = ind;
+    vec3 color = ind + di;
     // Gamma correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));  
