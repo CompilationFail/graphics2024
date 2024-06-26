@@ -729,7 +729,7 @@ uniform float m_roughness;
 uniform float m_ao;
 
 layout(location = 0) out vec3 frag_color;
-layout(location = 1) out vec3 frag_depth;
+layout(location = 1) out vec3 frag_normal;
 
 float PI = 3.14159265;
 vec2 scale_uv(vec2 uv, vec3 scale) {
@@ -839,7 +839,7 @@ void main() {
         normal = tmp;
     }
     
-    frag_depth = (normal + vec3(1)) / 2;
+    frag_normal = (normal + vec3(1)) / 2;
     
     vec3 color = vec3(0);
     int i = 0;
@@ -967,7 +967,7 @@ vec3 L(vec3 light_position, vec3 light_normal, vec3 light_intense, vec3 n, vec3 
     vec3 specular = (F * D * G) / (4.0 * max(dot(n, v), 0.0) * max(dot(n, i), 0.0) + 0.0001);
     specular = specular * radiance * theta;
 
-    float As = 1000;
+    float As = 12;
     return (specular + diffuse) * As;
 }
 
@@ -975,7 +975,7 @@ float random (vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-int N = 50;
+int N = 200;
 vec3 sampleHemisphereCosine(vec3 normal, vec2 seed1, vec2 seed2) {
     // Generate two random numbers
     float u1 = random(seed1);
@@ -1043,7 +1043,7 @@ void main() {
     vec3 di = texture(geo_color, pos_screen.xy).rgb; // Direct Illumination
     vec3 ind = vec3(0);
     int i = 0;
-    int rmax = 4;
+    int rmax = 2;
     for(i = 0; i < N; ++i) {
         vec3 dir = sampleHemisphereCosine(normal, pos_screen.xy + vec2(i + 1, 0), pos_screen.xy + vec2(0, i + 1));
         if(dot(dir, normal) < 1e-4) continue;
@@ -1054,20 +1054,135 @@ void main() {
             continue;
         float z = texture(geo_depth, p_screen.xy).r;
         // float bias = max(length(p), 1) / 3000; 
-        if(z + 1e-3 < p_screen.z) {
+        if(z + 1e-4 < p_screen.z) {
             p_screen.z = z;
-            p = screen2world(p);
+            p = screen2world(p_screen);
             vec3 p_normal = texture(geo_normal, p_screen.xy).rgb * 2 - 1;
             vec3 p_color = texture(geo_color, p_screen.xy).rgb;
             // ind = N * (p / 3 + 0.5);
             ind += L(p, p_normal, p_color, normal, pos, albedo, metallic, roughness);
-            // = p_color * N;
+            // ind = p_color * N;
+            // ind = (vec3(p_screen.z) / 5 + 0.5) * N;
         }
     }
 
     ind /= N;
+    frag_color = vec4(ind,0);
 
-    vec3 color =  ind * 4;
+}
+)";
+
+static const char *frag3 = R"(
+#version 330 core
+// #extension GL_ARB_explicit_uniform_location : enable
+
+in vec2 o_uv;
+in vec3 o_pos;
+in vec3 o_norm;
+
+uniform mat4 vp, vp_inv;
+
+uniform sampler2D tex;
+uniform sampler2D tex_norm;
+uniform vec3 tex_scale;
+uniform vec3 tex_norm_scale;
+uniform int has_tex;
+uniform int has_tex_norm;
+uniform vec3 camera;
+
+uniform int light_cnt;
+uniform vec3 light_position[10];
+uniform vec3 light_intense[10];
+uniform vec3 light_direction[10];
+uniform mat4 light_vp[10];
+uniform int light_type[10];
+
+uniform sampler2D depth_map[10];
+uniform int has_depth_map;
+
+uniform sampler2D geo_depth, geo_normal, geo_color;
+
+float F0; // constant for fresnel term
+
+// material parameters
+uniform vec3  m_albedo;
+uniform float m_metallic;
+uniform float m_roughness;
+uniform float m_ao;
+
+// out vec4 frag_color[2];
+out vec4 frag_color;
+
+vec2 scale_uv(vec2 uv, vec3 scale) {
+    return vec2(uv.x / scale.x, uv.y / scale.y);
+}
+vec3 decw(vec4 p) {
+    return p.xyz / p.w;
+}
+vec3 world2screen(vec3 p) {
+    return (decw(vp * vec4(p, 1)) + vec3(1)) / 2;
+}
+vec3 screen2world(vec3 p) {
+    return decw(vp_inv * vec4(p * 2 - vec3(1), 1));
+}
+
+float PI = 3.14159265;
+
+void main() {
+    vec3 albedo = m_albedo;
+    float metallic = m_metallic;
+    float roughness = m_roughness;
+    vec3 normal = o_norm;
+    vec3 pos = o_pos;
+    vec3 pos_screen = world2screen(pos);
+    
+    // normal = texture(geo_normal, pos_screen.xy).rgb * 2 - 1;
+    // frag_color = vec4((normal + 1) / 2, 1);
+    // frag_color = vec4((pos_screen.z - 0.8) * 3);
+    // pos = screen2world(pos_screen);
+    // frag_color = vec4(pos / 3 + 0.5, 1);
+    // return;
+    
+
+    /*if(texture(geo_depth, pos_screen.xy).r * (1 + 1e-3) < pos_screen.z) {
+        frag_color = vec4(pos_screen.z / 4);
+        return;
+    }*/
+
+    if(has_tex == 1) {
+        vec3 color = texture(tex, scale_uv(o_uv, tex_scale)).rgb;
+        albedo = pow(color, vec3(2.2));
+    }
+    if(has_tex_norm == 1) {
+        normal = texture(tex_norm, scale_uv(o_uv, tex_norm_scale)).rgb;
+        normal = normalize(normal * 2 - vec3(1,1,1));
+        vec3 tmp;
+        tmp.y = normal.z;
+        tmp.x = normal.x;
+        tmp.z = normal.y;
+        normal = tmp;
+    }
+    
+    vec3 di = texture(geo_color, pos_screen.xy).rgb; // Direct Illumination
+    vec3 ind = vec3(0);
+    // texture(geo_normal, pos_screen.xy).rgb; // ssdo indirect light
+    vec3 s = vec3(0);
+    float w = 0.;
+    float step = 1e-3, L = 5 * step;
+    for(float x = pos_screen.x - L; x <= pos_screen.x + L; x += step) {
+        if(x < 0 || x >= 1) continue;
+        for(float y = pos_screen.y - L; y <= pos_screen.y + L; y += step) {
+            if(y < 0 || y >= 1) continue;
+            // float w = 1 / (0.1 + length(di - texture(geo_color, vec2(x, y)));
+            vec2 d = (vec2(x, y) - pos_screen.xy) / step;
+            float wi = 1 / (1 + dot(d, d));
+            w += wi;
+            s += wi * texture(geo_normal, vec2(x, y)).rgb; // ssdo indirect light
+        }
+    }
+    ind = s / w;
+
+    vec3 color = ind;
 
     // Gamma correction
     color = color / (color + vec3(1.0));
@@ -1078,7 +1193,7 @@ void main() {
 )";
 }
 
-SSDO::SSDO(int render_pass): Shader(SSDO_text::vert, render_pass == 1 ? SSDO_text::frag1 : SSDO_text::frag2) {
+SSDO::SSDO(int render_pass): Shader(SSDO_text::vert, render_pass == 0 ? SSDO_text::frag1 : (render_pass == 1 ? SSDO_text::frag2: SSDO_text::frag3)) {
     model = loc("model");
     vp = loc("vp");
     vp_inv = loc("vp_inv");

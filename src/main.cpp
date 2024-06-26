@@ -48,9 +48,12 @@ public:
         printf("Terminated..");
     }
     void init() {
-        camera.position = glm::vec3(-0.6f,2.f, 4.f);
+        /*camera.position = glm::vec3(-0.6f,2.f, 4.f);
         camera.pitch = glm::radians(-30.f);
-        camera.yaw = -PI/2;
+        camera.yaw = -PI/2;*/
+        camera.position = glm::vec3(-0.052f,0.472f, -2.048f);
+        camera.pitch = -0.558f;
+        camera.yaw = 1.517f;
         /*lights.push_back({
             Camera{-0.581, PI, glm::vec3(8.11,6.91,-5.97)},
             glm::vec3(100),
