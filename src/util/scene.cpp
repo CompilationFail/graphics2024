@@ -14,6 +14,7 @@ void Scene::init_draw(int _width, int _height) {
     width = _width, height = _height;
 
     glGenFramebuffers(1, &buffer);
+    glGenFramebuffers(1, &buffer2);
     glGenTextures(1, &depth);
     glBindTexture(GL_TEXTURE_2D, depth);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width,
@@ -23,7 +24,6 @@ void Scene::init_draw(int _width, int _height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    glGenFramebuffers(1, &normal);
     glGenTextures(1, &normal);
     glBindTexture(GL_TEXTURE_2D, normal);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
@@ -33,9 +33,17 @@ void Scene::init_draw(int _width, int _height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    glGenFramebuffers(1, &color);
     glGenTextures(1, &color);
     glBindTexture(GL_TEXTURE_2D, color);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+                 GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    glGenTextures(1, &ssdo);
+    glBindTexture(GL_TEXTURE_2D, ssdo);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
                  GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -51,7 +59,15 @@ void Scene::init_draw(int _width, int _height) {
     glDrawBuffers(2, buffers);
     glReadBuffer(GL_NONE);
     CheckGLError();
-
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    CheckGLError();
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, buffer2);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssdo, 0);
+    glDrawBuffers(1, buffers);
+    glReadBuffer(GL_NONE);
+    CheckGLError();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     CheckGLError();
 }
@@ -100,30 +116,60 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
             // mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_info, depth_map);
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-    glfwSwapBuffers(window);
-    CheckGLError();
+    };
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, buffer2);
+        CheckGLError();
 
-    glViewport(0, 0, width, height);
-    CheckGLError();
-    glClearColor(0.0, 0.0, 0.0, 1.);
-    CheckGLError();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    CheckGLError();
-    glEnable(GL_DEPTH_TEST);
-    CheckGLError();
-    glDepthFunc(GL_LESS);
-    CheckGLError();
-    for(auto &[name, mesh]: meshes) {
-        if(!_model.count(name)) {
-            mesh->draw(glm::mat4(1.f), vp, camera, light_info, depth_map, 1, depth, normal, color);
-        } else {
-            for(auto model: _model[name]) {
-                mesh->draw(model, vp, camera, light_info, depth_map, 1, depth, normal, color);
+        // glfwGetFramebufferSize(window, &width, &height);
+        // CheckGLError();
+        glViewport(0, 0, width, height);
+        CheckGLError();
+        glClearColor(0., 0., 0., 1.);
+        CheckGLError();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CheckGLError();
+        glEnable(GL_DEPTH_TEST);
+        CheckGLError();
+        glDepthFunc(GL_LESS);
+        CheckGLError();
+        for(auto &[name, mesh]: meshes) {
+            if(!_model.count(name)) {
+                mesh->draw(glm::mat4(1.f), vp, camera, light_info, depth_map, 1, depth, normal, color);
+            } else {
+                for(auto model: _model[name]) {
+                    mesh->draw(model, vp, camera, light_info, depth_map, 1, depth, normal, color);
+                }
             }
+            // mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_info, depth_map);
         }
-        // mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_info, depth_map);
-    }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    };
+    {
+        glfwSwapBuffers(window);
+        CheckGLError();
+
+        glViewport(0, 0, width, height);
+        CheckGLError();
+        glClearColor(0.0, 0.0, 0.0, 1.);
+        CheckGLError();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CheckGLError();
+        glEnable(GL_DEPTH_TEST);
+        CheckGLError();
+        glDepthFunc(GL_LESS);
+        CheckGLError();
+        for(auto &[name, mesh]: meshes) {
+            if(!_model.count(name)) {
+                mesh->draw(glm::mat4(1.f), vp, camera, light_info, depth_map, 2, depth, ssdo, color);
+            } else {
+                for(auto model: _model[name]) {
+                    mesh->draw(model, vp, camera, light_info, depth_map, 2, depth, ssdo, color);
+                }
+            }
+            // mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_info, depth_map);
+        }
+    };
 }
 
 void Scene::render_depth_buffer() {

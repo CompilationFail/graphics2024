@@ -62,7 +62,7 @@ public:
     std::unique_ptr <MaterialLib> mtl;
     std::map <VertexIndices, uint32_t> mp;
     GLuint vertex_buffer;
-    std::unique_ptr <SSDO> shader1, shader2;
+    std::unique_ptr <SSDO> shaders[3];
     // std::unique_ptr <PhongShader> shader;
     Mesh() { }
     ~Mesh() {
@@ -71,7 +71,7 @@ public:
             printf("Delete vertex buffer: %d\n", vertex_buffer);
         }
         printf("Delete program\n");
-        shader1 = nullptr, shader2 = nullptr;
+        for(int i = 0; i < 3; ++i) shaders[i] = nullptr;
     }
     /*
      * Load from a [.obj] file

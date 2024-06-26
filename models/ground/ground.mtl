@@ -6,8 +6,8 @@ Kd 1 0 0
 Ks 0.200000 0.200000 0.200000
 Ke 0.000000 0.000000 0.000000
 ao 0.04
-roughness 0.8
-metallic 0.4
+roughness 0.4
+metallic 0.8
 Ni 1.000000
 d 0.000000
 # map_Kd -s 1 1 1 Textures/texture.bmp
