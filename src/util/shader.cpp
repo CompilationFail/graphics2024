@@ -1,5 +1,5 @@
 #include "shader.hpp"
-
+#include<random>
 GLuint load_shader_from_text(const char *source, GLenum type) {
     GLuint shader = glCreateShader(type);
     const char *sources[] = {source};
@@ -989,7 +989,7 @@ float random (vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-int N = 300;
+int N = 1500;
 vec3 sampleHemisphereCosine(vec3 normal, vec2 seed1, vec2 seed2) {
     // Generate two random numbers
     float u1 = random(seed1);
@@ -1057,7 +1057,7 @@ void main() {
     vec3 di = texture(geo_color, pos_screen.xy).rgb; // Direct Illumination
     vec3 ind = vec3(0);
     int i = 0;
-    int rmax = 2;
+    float rmax = 0.2;
     for(i = 0; i < N; ++i) {
         vec3 dir = sampleHemisphereCosine(normal, pos_screen.xy + vec2(i + 1, 0), pos_screen.xy + vec2(0, i + 1));
         if(dot(dir, normal) < 1e-4) continue;
@@ -1184,7 +1184,7 @@ void main() {
     // texture(geo_normal, pos_screen.xy).rgb; // ssdo indirect light
     vec3 s = vec3(0);
     float w = 0.;
-    float step = 1e-3, L = 0* step;
+    float step = 1e-3, L = 3* step;
     vec3 mi = vec3(10),mx=vec3(0);
     for(float x = pos_screen.x - L; x <= pos_screen.x + L; x += step) {
         if(x < 0 || x >= 1) continue;
@@ -1205,7 +1205,7 @@ void main() {
     }
     ind = ind / 5 + s / w;
     // ind = s / w;
-    vec3 color = ind + di;
+    vec3 color = ind;
     // Gamma correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));  

@@ -19,7 +19,7 @@ public:
 
     int width, height;
     // Geometry Buffer for first pass
-    GLuint buffer, depth, normal, color, buffer2, ssdo;
+    GLuint buffer, depth, normal, color, buffer2, ssdo, depth2;
 
     std::unique_ptr <DepthShader> depth_shader;
     std::vector <LightInfo> light_info;

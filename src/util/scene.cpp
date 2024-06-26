@@ -23,6 +23,15 @@ void Scene::init_draw(int _width, int _height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    glGenTextures(1, &depth2);
+    glBindTexture(GL_TEXTURE_2D, depth2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width,
+                 height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     glGenTextures(1, &normal);
     glBindTexture(GL_TEXTURE_2D, normal);
@@ -63,7 +72,7 @@ void Scene::init_draw(int _width, int _height) {
     CheckGLError();
     
     glBindFramebuffer(GL_FRAMEBUFFER, buffer2);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth2, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssdo, 0);
     glDrawBuffers(1, buffers);
     glReadBuffer(GL_NONE);
@@ -169,6 +178,7 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
             }
             // mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_info, depth_map);
         }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     };
 }
 
