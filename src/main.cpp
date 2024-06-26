@@ -112,7 +112,11 @@ public:
         return glm::perspective(glm::radians(45.f), 1.f * width / height, .1f, 100.f);
     }
     void load_scene(char *str) {
-        scene -> load(str);
+        try {
+            scene -> load(str);
+        } catch(char *msg) {
+            printf("Fail to load scene: %s\n", msg);
+        }
     }
     /*glm::mat4 view() {
         return glm::rotate(glm::mat4(1.f), -pitch, glm::vec3(1, 0, 0)) *
@@ -202,7 +206,7 @@ int main(int argc, char **argv) {
     }*/
     char s[]="D:/ssdo/graphics2024/1.scene";
     app.load_scene(s);
-//    for(int i = 1; i < argc; ++i) app.load_scene(argv[i]);
+    for(int i = 1; i < argc; ++i) app.load_scene(argv[i]);
     // app.load_beatmap("2.beatmap");
     app.main_loop();
 }
