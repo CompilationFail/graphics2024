@@ -200,7 +200,9 @@ int main(int argc, char **argv) {
         printf("loading %s %s\n", name.c_str(), argv[i]);
         app.load(name, argv[i]);
     }*/
-    for(int i = 1; i < argc; ++i) app.load_scene(argv[i]);
+    char s[]="D:/ssdo/graphics2024/1.scene";
+    app.load_scene(s);
+//    for(int i = 1; i < argc; ++i) app.load_scene(argv[i]);
     // app.load_beatmap("2.beatmap");
     app.main_loop();
 }

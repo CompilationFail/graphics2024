@@ -975,7 +975,7 @@ float random (vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-int N = 200;
+int N = 1500;
 vec3 sampleHemisphereCosine(vec3 normal, vec2 seed1, vec2 seed2) {
     // Generate two random numbers
     float u1 = random(seed1);
@@ -1022,7 +1022,7 @@ void main() {
     
 
     if(texture(geo_depth, pos_screen.xy).r * (1 + 1e-3) < pos_screen.z) {
-        frag_color = vec4(pos_screen.z / 4);
+        frag_color = vec4(0);
         return;
     }
 
@@ -1053,8 +1053,8 @@ void main() {
         if(p_screen.x < 0 || p_screen.x >= 1 || p_screen.y < 0 || p_screen.y >= 1) 
             continue;
         float z = texture(geo_depth, p_screen.xy).r;
-        // float bias = max(length(p), 1) / 3000; 
-        if(z + 1e-4 < p_screen.z) {
+        float bias = max(length(p), 1) / 3000; 
+        if(z + bias < p_screen.z) {
             p_screen.z = z;
             p = screen2world(p_screen);
             vec3 p_normal = texture(geo_normal, p_screen.xy).rgb * 2 - 1;
@@ -1182,7 +1182,7 @@ void main() {
     }
     ind = s / w;
 
-    vec3 color = ind;
+    vec3 color = di + ind;
 
     // Gamma correction
     color = color / (color + vec3(1.0));
