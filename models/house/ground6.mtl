@@ -1,0 +1,16 @@
+newmtl ground
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+# Kd 0.253072 0.253072 0.253072
+Kd 1 0 0
+Ks 0.200000 0.200000 0.200000
+Ke 0.000000 0.000000 0.000000
+ao 0.04
+roughness 0.4
+metallic 0.8
+Ni 1.000000
+d 0.000000
+# map_Kd -s 1 1 1 Textures/texture.bmp
+# map_normal -s 1 1 1 Textures/normal.bmp
+
+

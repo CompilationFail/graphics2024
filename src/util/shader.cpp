@@ -1127,7 +1127,9 @@ vec3 screen2world(vec3 p) {
 }
 
 float PI = 3.14159265;
-
+float random (vec2 uv) {
+    return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
+}
 void main() {
     vec3 albedo = m_albedo;
     float metallic = m_metallic;
@@ -1135,7 +1137,7 @@ void main() {
     vec3 normal = o_norm;
     vec3 pos = o_pos;
     vec3 pos_screen = world2screen(pos);
-    
+
     // normal = texture(geo_normal, pos_screen.xy).rgb * 2 - 1;
     // frag_color = vec4((normal + 1) / 2, 1);
     // frag_color = vec4((pos_screen.z - 0.8) * 3);
@@ -1168,7 +1170,8 @@ void main() {
     // texture(geo_normal, pos_screen.xy).rgb; // ssdo indirect light
     vec3 s = vec3(0);
     float w = 0.;
-    float step = 1e-3, L = 5 * step;
+    float step = 1e-3, L = 0* step;
+    vec3 mi = vec3(10),mx=vec3(0);
     for(float x = pos_screen.x - L; x <= pos_screen.x + L; x += step) {
         if(x < 0 || x >= 1) continue;
         for(float y = pos_screen.y - L; y <= pos_screen.y + L; y += step) {
@@ -1178,12 +1181,14 @@ void main() {
             float wi = 1 / (1 + dot(d, d));
             w += wi;
             s += wi * texture(geo_normal, vec2(x, y)).rgb; // ssdo indirect light
+            vec3 now=texture(geo_normal, vec2(x, y)).rgb;
+            for(int i=0;i<3;++i)mi[i]=min(mi[i],now[i]),mx[i]=max(mx[i],now[i]);
         }
     }
-    ind = s / w;
-
-    vec3 color = di + ind;
-
+    for(int i=0;i<3;++i)ind[i]=mi[i]+random(pos_screen.xy) * (mx[i]-mi[i]);
+    ind=ind/5+s/w;
+    // ind = s / w;
+    vec3 color = ind;
     // Gamma correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));  
