@@ -133,7 +133,6 @@ public:
         auto last = glfwGetTime();
         int frame_count = 0;
         while (!glfwWindowShouldClose(window)) {
-            // scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(debug_x, debug_y, debug_z))};
             /*for(auto &[x,y]: scene -> meshes) if(x == "ground") {
                 for(auto m: y->mtl->materials) {
                     m->roughness = roughness;
@@ -141,6 +140,9 @@ public:
                 }
             }*/
             auto now = glfwGetTime();
+            float t = now / 10;
+            float dz = abs(t  - int(t / 2) * 2 - 1);
+            scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(0, -1, dz))};
             control_update_frame(now);
             /*scene->model()["wheel"] = {};
             for(auto [t, x]: beatmap) {

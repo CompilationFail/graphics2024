@@ -241,7 +241,7 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float tim
 
         denoiser -> use();
         CheckGLError();
-        float alpha = std::min(1.f, denoise_alpha * (1 + movement * 1000));
+        float alpha = std::min(1.f, denoise_alpha * (1 + movement * 3000));
         denoiser -> set(ssdo, first ? 0 : out_b, alpha);
         CheckGLError();
         first = 0;
@@ -275,7 +275,7 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float tim
 
         mixer -> use();
         // mixer -> set(color, ssdo);
-        float alpha = 1 / (1 + movement * 1000);
+        float alpha = 1 / (1 + movement * 300);
         mixer -> set(color, out_a, alpha);
         
         glDrawArrays(GL_TRIANGLES, 0, 6);
