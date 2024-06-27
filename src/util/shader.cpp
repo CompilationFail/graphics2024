@@ -996,7 +996,7 @@ float random (vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-int N = 200;
+int N = 100;
 vec3 sampleHemisphereCosine(vec3 normal, vec2 seed1, vec2 seed2) {
     // Generate two random numbers
     float u1 = random(seed1);
@@ -1064,7 +1064,7 @@ void main() {
     vec3 di = texture(geo_color, pos_screen.xy).rgb; // Direct Illumination
     vec3 ind = vec3(0);
     int i = 0;
-    float rmax = 1.5;
+    float rmax = 2;
     for(i = 0; i < N; ++i) {
         vec3 dir = sampleHemisphereCosine(normal, pos_screen.xy + vec2(i + 1, gtime / 2), pos_screen.xy + vec2(gtime / 3, i + 1));
         if(dot(dir, normal) < 1e-4) continue;
@@ -1264,7 +1264,7 @@ float random (vec2 uv) {
 void main() {
     vec2 pos_screen = (pos.xy + 1) / 2;
     vec2 step = 1 / textureSize(tex, 0);
-    int L = 5;
+    int L = 6;
     vec3 mi = vec3(10), mx = vec3(0);
     vec3 res = vec3(0);
     vec3 s = vec3(0);
@@ -1289,6 +1289,24 @@ void main() {
     }
     res = res / 3 + s / w;
     if(has_last > 0) {
+        /*L = 0;
+        vec3 s = vec3(0);
+        float w = 0;
+        for(int i = -L; i <= L; i++) {
+            float x = pos_screen.x + i * step.x;
+            if(x < 0 || x >= 1) continue;
+            for(int j = - L; j <= L; j ++) {
+                float y = pos_screen.y + j * step.x;
+                if(y < 0 || y >= 1) continue;
+                vec2 d = vec2(i, j);
+                vec3 color = texture(last, vec2(x, y)).rgb;
+                float wi = 1 / (1 + length(d));
+                w += wi;
+                s += wi * color; // ssdo indirect light
+                mi = min(mi, color);
+                mx = max(mx, color);
+            }
+        }*/
         res = res * alpha + (1 - alpha) * texture(last, pos_screen).rgb;
     }
     frag_color = vec4(res, 1);

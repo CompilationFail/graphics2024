@@ -6,8 +6,9 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <string>
 
-float roughness = 0.3f;
-float metallic = 0.6f;
+float roughness = 0.1f;
+float metallic = 0.97f;
+glm::vec3 color(1);
 
 float debug_x, debug_y = -1.f, debug_z;
 /*float particle_size = 1.5;
@@ -127,6 +128,12 @@ void ui() {
         ImGui::SliderFloat("Particle size:", &particle_size, 0.1, 10);
         ImGui::SliderFloat("Rotate speed", &rot_speed, 0.1, 5);
         ImGui::SliderInt("Particle number", &particle_number, 1000, 1e5);*/
+        ImGui::Text("Ground Material");
+        ImGui::SliderFloat("roughness", &roughness, 0.f, 1.f);
+        ImGui::SliderFloat("metallic", &metallic, 0.f, 1.f);
+        ImGui::SliderFloat("r", &color.x, 0.f, 1.f);
+        ImGui::SliderFloat("g", &color.y, 0.f, 1.f);
+        ImGui::SliderFloat("b", &color.z, 0.f, 1.f);
         ImGui::Text("Lights Info");
         for(int i = 0; i < (int) lights.size(); ++i) {
             auto &l = lights[i];

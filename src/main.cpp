@@ -51,9 +51,15 @@ public:
         /*camera.position = glm::vec3(-0.6f,2.f, 4.f);
         camera.pitch = glm::radians(-30.f);
         camera.yaw = -PI/2;*/
+        /*
+        // front view
         camera.position = glm::vec3(0.041f,0.156f, -1.578f);
         camera.pitch = -0.558f;
-        camera.yaw = 1.517f;
+        camera.yaw = 1.517f;*/
+        // reflection view
+        camera.position = glm::vec3(1.13f,0.786f, -0.492f);
+        camera.pitch = -0.864f;
+        camera.yaw = 2.677f;
         /*lights.push_back({
             Camera{-0.581, PI, glm::vec3(8.11,6.91,-5.97)},
             glm::vec3(100),
@@ -133,12 +139,13 @@ public:
         auto last = glfwGetTime();
         int frame_count = 0;
         while (!glfwWindowShouldClose(window)) {
-            /*for(auto &[x,y]: scene -> meshes) if(x == "ground") {
+            for(auto &[x,y]: scene -> meshes) if(x == "ground") {
                 for(auto m: y->mtl->materials) {
                     m->roughness = roughness;
                     m->metallic= metallic;
+                    m->Kd = color;
                 }
-            }*/
+            }
             auto now = glfwGetTime();
             float t = now / 10;
             float dz = abs(t  - int(t / 2) * 2 - 1);
