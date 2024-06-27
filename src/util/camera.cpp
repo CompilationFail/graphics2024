@@ -1,5 +1,4 @@
 #include "camera.hpp"
-#include "json.hpp"
 
 Camera::Camera(float pitch, float yaw, glm::vec3 position)
     : pitch(pitch), yaw(yaw), position(position) {}

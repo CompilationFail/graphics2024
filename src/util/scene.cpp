@@ -242,7 +242,6 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float tim
         denoiser -> use();
         CheckGLError();
         float alpha = std::min(1.f, denoise_alpha * (1 + movement * 1000));
-        if(movement > 0.00001) printf("%f\n", alpha);
         denoiser -> set(ssdo, first ? 0 : out_b, alpha);
         CheckGLError();
         first = 0;

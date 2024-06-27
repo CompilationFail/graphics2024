@@ -98,7 +98,7 @@ void update(double now) {
     {
         if (key_WASD[i]) {
             camera -> position += camera -> dir4(i) * stride * float(now - last_time) * speed;
-            movement += speed * float(now - last_time);
+            movement += speed * float(now - last_time) / 3;
         }
     }
     last_time = now;

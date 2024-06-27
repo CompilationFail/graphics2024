@@ -51,7 +51,7 @@ public:
         /*camera.position = glm::vec3(-0.6f,2.f, 4.f);
         camera.pitch = glm::radians(-30.f);
         camera.yaw = -PI/2;*/
-        camera.position = glm::vec3(-0.052f,0.472f, -2.048f);
+        camera.position = glm::vec3(0.041f,0.156f, -1.578f);
         camera.pitch = -0.558f;
         camera.yaw = 1.517f;
         /*lights.push_back({
