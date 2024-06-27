@@ -1,0 +1,24 @@
+# Blender 3.4.1 MTL File: 'WoodDesk.blend'
+# www.blender.org
+
+newmtl Wood.009
+Ka 0.200000 0.200000 0.200000
+Ks 0.200000 0.200000 0.200000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Kd -s 4 4 1 Textures/wood-78_diffuse.png
+map_Ns -s 4 4 1 Textures/wood-78_smooth.png
+map_Bump -s 4 4 1 -bm 1.000000 Textures/wood_panel_Normal.png
+
+newmtl Wood_panel
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd Textures/wood_panel_BaseColor.png
+map_Ns Textures/wood_panel_Roughness.png
+map_Bump -bm 1.000000 Textures/wood_panel_Normal.png

@@ -25,6 +25,7 @@ float alpha = 0.98;
 
 float movement = 0;
 
+float ssdo_alpha = 1;
 namespace Control {
 
 
@@ -43,7 +44,6 @@ int first_callback = true;
 const double angle_stride = 0.002;
 int mouse_state;
 float fps = 0;
-
 
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -143,7 +143,8 @@ void ui() {
             ImGui::SliderFloat((std::to_string(i) + ": intense.x:").c_str(), &l.intense.x, -10, 10);
             ImGui::SliderFloat((std::to_string(i) + ": intense.y:").c_str(), &l.intense.y, -10, 10);
             ImGui::SliderFloat((std::to_string(i) + ": intense.z:").c_str(), &l.intense.z, -10, 10);
-        } 
+        }
+        ImGui::SliderFloat("SSDO strength", &ssdo_alpha, 0.f, 1.f);
         ImGui::SliderFloat("Temporal Denoising", &alpha, 0.f, 1.f);
         ImGui::Text("Debug parameters");
         ImGui::SliderFloat("x:", &debug_x, -100, 100);

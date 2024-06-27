@@ -42,6 +42,6 @@ public:
     void init_draw(int width, int height);
     void activate_shadow();
     void update_light(std::vector <LightInfo> info);
-    void render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float time, float denoise_alpha = 0.02f, float movement = 0.f);
+    void render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float time, float denoise_alpha = 0.02f, float movement = 0.f, float ssdo_alpha = 1.f);
 };
 

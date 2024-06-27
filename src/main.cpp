@@ -149,7 +149,7 @@ public:
             auto now = glfwGetTime();
             float t = now / 10;
             float dz = abs(t  - int(t / 2) * 2 - 1);
-            scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(0, -1, dz))};
+            //scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(0, -1, dz))};
             control_update_frame(now);
             /*scene->model()["wheel"] = {};
             for(auto [t, x]: beatmap) {
@@ -188,7 +188,7 @@ public:
             // light, light_intense);
             float m = movement;
             movement = 0;
-            scene->render(window, vp, camera.position, now, 1 - alpha, m);
+            scene->render(window, vp, camera.position, now, 1 - alpha, m, ssdo_alpha);
 
             // ps->set_particle_size(2e-3 * particle_size);
             // ps->draw(particle_number, vp, Control::camera, now / 100 * rot_speed, light);
@@ -215,7 +215,7 @@ int main(int argc, char **argv) {
         printf("loading %s %s\n", name.c_str(), argv[i]);
         app.load(name, argv[i]);
     }*/
-    char s[]="D:/ssdo/graphics2024/1.scene";
+    char s[]="D:/ssdo/graphics2024/2.scene";
     app.load_scene(s);
     for(int i = 1; i < argc; ++i) app.load_scene(argv[i]);
     // app.load_beatmap("2.beatmap");

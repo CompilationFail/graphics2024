@@ -161,7 +161,7 @@ void Scene::activate_shadow() {
 void Scene::update_light(std::vector <LightInfo> info) {
     light_info = info;
 }
-void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float time, float denoise_alpha, float movement) {
+void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float time, float denoise_alpha, float movement, float ssdo_alpha) {
     glfwGetFramebufferSize(window, &width, &height);
     CheckGLError();
     glfwPollEvents();
@@ -275,7 +275,7 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float tim
 
         mixer -> use();
         // mixer -> set(color, ssdo);
-        float alpha = 1 / (1 + movement * 300);
+        float alpha = ssdo_alpha / (1 + movement * 300);
         mixer -> set(color, out_a, alpha);
         
         glDrawArrays(GL_TRIANGLES, 0, 6);

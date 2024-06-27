@@ -25,6 +25,7 @@ Source code for graphics 2024 course homework.
 
 存在的问题：
 
-1. SSDO 的采样策略较差，导致采样数较高（此处为效率瓶颈）。
+1. SSDO 的采样策略较差（此处为效率瓶颈）。
 2. 仅 Pooling 降噪效果依然不佳，加入 Temporal 后在移动时无法保持高质量的间接光效果。
 
+3. 因为没有实现SSR，所以倒影质量较低
