@@ -996,7 +996,7 @@ float random (vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-int N = 100;
+int N = 200;
 vec3 sampleHemisphereCosine(vec3 normal, vec2 seed1, vec2 seed2) {
     // Generate two random numbers
     float u1 = random(seed1);
@@ -1277,7 +1277,7 @@ void main() {
             if(y < 0 || y >= 1) continue;
             vec2 d = vec2(i, j);
             vec3 color = texture(tex, vec2(x, y)).rgb;
-            float wi = 1 / (1 + dot(d, d));
+            float wi = 1 / (1 + length(d));
             w += wi;
             s += wi * color; // ssdo indirect light
             mi = min(mi, color);
@@ -1287,7 +1287,7 @@ void main() {
     for(int i = 0; i < 3; ++i) {
         res[i] = mi[i] + random(pos_screen + mi.xy) * (mx[i] - mi[i]);
     }
-    res = res / 3 + s / w / 2;
+    res = res / 3 + s / w;
     if(has_last > 0) {
         res = res * alpha + (1 - alpha) * texture(last, pos_screen).rgb;
     }
@@ -1326,6 +1326,7 @@ static const char *frag = R"(
 in vec3 pos;
 
 uniform sampler2D direct, ind;
+uniform float alpha;
 
 layout(location = 0) out vec4 frag_color;
 
@@ -1333,7 +1334,7 @@ void main() {
     vec2 scr = (pos.xy + 1) / 2;
     vec3 d = texture(direct, scr).rgb;
     vec3 i = texture(ind, scr).rgb;
-    vec3 color = i;
+    vec3 color = d + i * alpha;
     // Gamma correction
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2));  
@@ -1346,14 +1347,16 @@ void main() {
 Mixer::Mixer(): Shader(vanila_vert, MIXER::frag) {
     direct = loc("direct");
     ind = loc("ind");
+    alpha = loc("alpha");
 }
-void Mixer::set(GLuint _d, GLuint _i) {
+void Mixer::set(GLuint _d, GLuint _i, float _alpha) {
     glUniform1i(direct, 0);
     glUniform1i(ind, 1);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _d);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, _i);
+    glUniform1f(alpha, _alpha);
 }
 
 

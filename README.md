@@ -16,7 +16,7 @@ Source code for graphics 2024 course homework.
 4. PBR 材质。
 5. PCF soft shadow.
 6. SSDO 近似光照（仅计算 1 bounce）。
-7. 对于间接光的 Spatial pooling denoising.
+7. 对于间接光使用了 denoise。
 
 测试环境为：
 
@@ -26,5 +26,5 @@ Source code for graphics 2024 course homework.
 存在的问题：
 
 1. SSDO 的采样策略较差，导致采样数较高（此处为效率瓶颈）。
-2. 降噪效果依然不佳，存在噪点闪烁和条纹。
-3. Gamma 矫正后丢失精度导致地面光照出现圈状。
+2. 仅 Pooling 降噪效果依然不佳，加入 Temporal 后在移动时无法保持高质量的间接光效果。
+

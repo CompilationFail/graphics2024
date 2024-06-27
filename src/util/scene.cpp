@@ -38,6 +38,7 @@ void Scene::init_draw(int _width, int _height) {
     glGenFramebuffers(1, &buffer);
     glGenFramebuffers(1, &buffer2);
     glGenFramebuffers(1, &buffer3);
+    glGenFramebuffers(1, &buffer4);
     glGenTextures(1, &depth);
     glBindTexture(GL_TEXTURE_2D, depth);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width,
@@ -58,7 +59,7 @@ void Scene::init_draw(int _width, int _height) {
 
     glGenTextures(1, &normal);
     glBindTexture(GL_TEXTURE_2D, normal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16_SNORM, width, height, 0,
                  GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -67,7 +68,7 @@ void Scene::init_draw(int _width, int _height) {
 
     glGenTextures(1, &color);
     glBindTexture(GL_TEXTURE_2D, color);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16_SNORM, width, height, 0,
                  GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -76,7 +77,7 @@ void Scene::init_draw(int _width, int _height) {
     
     glGenTextures(1, &ssdo);
     glBindTexture(GL_TEXTURE_2D, ssdo);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16_SNORM, width, height, 0,
                  GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -85,7 +86,7 @@ void Scene::init_draw(int _width, int _height) {
     
     glGenTextures(1, &out_a);
     glBindTexture(GL_TEXTURE_2D, out_a);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16_SNORM, width, height, 0,
                  GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -94,7 +95,7 @@ void Scene::init_draw(int _width, int _height) {
     
     glGenTextures(1, &out_b);
     glBindTexture(GL_TEXTURE_2D, out_b);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16_SNORM, width, height, 0,
                  GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -120,6 +121,25 @@ void Scene::init_draw(int _width, int _height) {
     CheckGLError();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     CheckGLError();
+        
+    glBindFramebuffer(GL_FRAMEBUFFER, buffer3);
+    CheckGLError();
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out_a, 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glReadBuffer(GL_NONE);
+    CheckGLError();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    CheckGLError();
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, buffer4);
+    CheckGLError();
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out_b, 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glReadBuffer(GL_NONE);
+    CheckGLError();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    CheckGLError();
+        
 
     try {
         denoiser = std::make_unique <Denoiser>();
@@ -141,7 +161,7 @@ void Scene::activate_shadow() {
 void Scene::update_light(std::vector <LightInfo> info) {
     light_info = info;
 }
-void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float time) {
+void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float time, float denoise_alpha, float movement) {
     glfwGetFramebufferSize(window, &width, &height);
     CheckGLError();
     glfwPollEvents();
@@ -212,8 +232,6 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float tim
         CheckGLError();
         glDisable(GL_DEPTH_TEST);
     
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out_b, 0);
-        
         glViewport(0, 0, width, height);
         CheckGLError();
         glClearColor(0.0, 0.0, 0.0, 1.);
@@ -221,14 +239,11 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float tim
         glClear(GL_COLOR_BUFFER_BIT);
         CheckGLError();
 
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        CheckGLError();
-        glReadBuffer(GL_NONE);
-        CheckGLError();
-        
         denoiser -> use();
         CheckGLError();
-        denoiser -> set(ssdo, first ? 0 : out_a, 0.5f);
+        float alpha = std::min(1.f, denoise_alpha * (1 + movement * 1000));
+        if(movement > 0.00001) printf("%f\n", alpha);
+        denoiser -> set(ssdo, first ? 0 : out_b, alpha);
         CheckGLError();
         first = 0;
 
@@ -261,7 +276,8 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float tim
 
         mixer -> use();
         // mixer -> set(color, ssdo);
-        mixer -> set(color, out_b);
+        float alpha = 1 / (1 + movement * 1000);
+        mixer -> set(color, out_a, alpha);
         
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -269,6 +285,7 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float tim
     };
     
     std::swap(out_a, out_b);
+    std::swap(buffer3, buffer4);
 }
 
 void Scene::render_depth_buffer() {

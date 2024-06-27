@@ -177,7 +177,9 @@ public:
             mesh->draw(vp, Control::camera, light);*/
             // scene->update_light(lights);
             // light, light_intense);
-            scene->render(window, vp, camera.position, now);
+            float m = movement;
+            movement = 0;
+            scene->render(window, vp, camera.position, now, 1 - alpha, m);
 
             // ps->set_particle_size(2e-3 * particle_size);
             // ps->draw(particle_number, vp, Control::camera, now / 100 * rot_speed, light);

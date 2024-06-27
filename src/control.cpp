@@ -20,6 +20,10 @@ std::vector <LightInfo> lights;
 Camera *cameras[10]; 
 int camera_cnt, current_camera;
 
+float alpha = 0.98;
+
+float movement = 0;
+
 namespace Control {
 
 
@@ -80,6 +84,7 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
             if(camera) {
                 camera -> pitch -= (float)dy;
                 camera -> yaw += (float)dx;
+                movement += (abs(dx) + abs(dy));
             }
         }
         l_xpos = xpos, l_ypos = ypos;
@@ -91,8 +96,10 @@ void update(double now) {
     if(!camera) return;
     for (int i = 0; i < 4; ++i)
     {
-        if (key_WASD[i])
+        if (key_WASD[i]) {
             camera -> position += camera -> dir4(i) * stride * float(now - last_time) * speed;
+            movement += speed * float(now - last_time);
+        }
     }
     last_time = now;
 }
@@ -130,9 +137,7 @@ void ui() {
             ImGui::SliderFloat((std::to_string(i) + ": intense.y:").c_str(), &l.intense.y, -10, 10);
             ImGui::SliderFloat((std::to_string(i) + ": intense.z:").c_str(), &l.intense.z, -10, 10);
         } 
-        ImGui::Text("Ground Material");
-        ImGui::SliderFloat("roughness:", &roughness, 0, 1);
-        ImGui::SliderFloat("metallic:", &metallic, 0, 1);
+        ImGui::SliderFloat("Temporal Denoising", &alpha, 0.f, 1.f);
         ImGui::Text("Debug parameters");
         ImGui::SliderFloat("x:", &debug_x, -100, 100);
         ImGui::SliderFloat("y:", &debug_y, -100, 100);

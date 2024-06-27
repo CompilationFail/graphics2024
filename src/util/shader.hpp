@@ -102,8 +102,8 @@ public:
 };
 
 class Mixer: public Shader {
-    GLint direct, ind;
+    GLint direct, ind, alpha;
 public:
     Mixer();
-    void set(GLuint direct, GLuint ind);
+    void set(GLuint direct, GLuint ind, float alpha = 1);
 };

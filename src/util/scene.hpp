@@ -21,7 +21,7 @@ public:
     // Geometry Buffer for first pass
     GLuint buffer, depth, normal, color;
     GLuint buffer2, ssdo, depth2;
-    GLuint buffer3, out_a, out_b; // for denoiser
+    GLuint buffer3, out_a, buffer4, out_b; // for denoiser
     int first;
 
     GLuint rec_vao, rec_vbo;
@@ -42,6 +42,6 @@ public:
     void init_draw(int width, int height);
     void activate_shadow();
     void update_light(std::vector <LightInfo> info);
-    void render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float time);
+    void render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float time, float denoise_alpha = 0.02f, float movement = 0.f);
 };
 
