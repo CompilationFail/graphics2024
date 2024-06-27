@@ -727,6 +727,7 @@ uniform vec3  m_albedo;
 uniform float m_metallic;
 uniform float m_roughness;
 uniform float m_ao;
+uniform float gtime;
 
 layout(location = 0) out vec3 frag_color;
 layout(location = 1) out vec3 frag_normal;
@@ -787,19 +788,23 @@ vec3 L(vec3 light_position, vec3 light_direction, vec3 light_intense, mat4 light
             int L = 3;
             float w = 0, s = 0;
             float bias = max((1.0 - dot(n, i)) * sqrt(r), 1) * 1e-4; 
-            for(int i = -L; i <= L; ++i) {
-                for(int j = -L; j <= L; ++j) {
-                    vec2 p = lpos.xy + vec2(step.x * i, step.y * j);
-                    if(p.x < 0 || p.x >= 1 || p.y < 0 || p.y >= 1) continue;
-                    float d = sqrt(i * i + j * j);
-                    float wi = 1 / (1 + d * d);
-                    w += wi;
-                    if(lpos.z <= texture(depth_map, p).r + bias * (1 + d)) {
-                        s += wi;
+            if(lpos.z <= texture(depth_map, lpos.xy).r + bias) {
+                vis = 1;
+            } else {
+                for(int i = -L; i <= L; ++i) {
+                    for(int j = -L; j <= L; ++j) {
+                        vec2 p = lpos.xy + vec2(step.x * i, step.y * j);
+                        if(p.x < 0 || p.x >= 1 || p.y < 0 || p.y >= 1) continue;
+                        float d = sqrt(i * i + j * j);
+                        float wi = 1 / (1 + d * d);
+                        w += wi;
+                        if(lpos.z <= texture(depth_map, p).r + bias * (1 + d)) {
+                            s += wi;
+                        }
                     }
                 }
+                vis = 1.0 * s / w;
             }
-            vis = 1.0 * s / w;
         }
     }
     if(vis <= 0) return vec3(0);
@@ -904,6 +909,8 @@ uniform float m_metallic;
 uniform float m_roughness;
 uniform float m_ao;
 
+uniform float gtime;
+
 // out vec4 frag_color[2];
 out vec4 frag_color;
 
@@ -981,7 +988,7 @@ vec3 L(vec3 light_position, vec3 light_normal, vec3 light_intense, vec3 n, vec3 
     vec3 specular = (F * D * G) / (4.0 * max(dot(n, v), 0.0) * max(dot(n, i), 0.0) + 0.0001);
     specular = specular * radiance * theta;
 
-    float As = 12;
+    float As = 3;
     return (specular + diffuse) * As;
 }
 
@@ -989,7 +996,7 @@ float random (vec2 uv) {
     return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-int N = 1500;
+int N = 100;
 vec3 sampleHemisphereCosine(vec3 normal, vec2 seed1, vec2 seed2) {
     // Generate two random numbers
     float u1 = random(seed1);
@@ -1057,11 +1064,11 @@ void main() {
     vec3 di = texture(geo_color, pos_screen.xy).rgb; // Direct Illumination
     vec3 ind = vec3(0);
     int i = 0;
-    float rmax = 0.2;
+    float rmax = 1.5;
     for(i = 0; i < N; ++i) {
-        vec3 dir = sampleHemisphereCosine(normal, pos_screen.xy + vec2(i + 1, 0), pos_screen.xy + vec2(0, i + 1));
+        vec3 dir = sampleHemisphereCosine(normal, pos_screen.xy + vec2(i + 1, gtime / 2), pos_screen.xy + vec2(gtime / 3, i + 1));
         if(dot(dir, normal) < 1e-4) continue;
-        float r = 0.01 + (rmax - 0.01) * max(0, random(pos_screen.xy + vec2(i + 1, i + 1)));
+        float r = 0.01 + (rmax - 0.01) * max(0, random(pos_screen.xy + vec2(i + 1 + gtime * 3, i + 1)));
         vec3 p = pos + r * dir;
         vec3 p_screen = world2screen(p);
         if(p_screen.x < 0 || p_screen.x >= 1 || p_screen.y < 0 || p_screen.y >= 1) 
@@ -1085,137 +1092,9 @@ void main() {
 
 }
 )";
-
-static const char *frag3 = R"(
-#version 330 core
-// #extension GL_ARB_explicit_uniform_location : enable
-
-in vec2 o_uv;
-in vec3 o_pos;
-in vec3 o_norm;
-
-uniform mat4 vp, vp_inv;
-
-uniform sampler2D tex;
-uniform sampler2D tex_norm;
-uniform vec3 tex_scale;
-uniform vec3 tex_norm_scale;
-uniform int has_tex;
-uniform int has_tex_norm;
-uniform vec3 camera;
-
-uniform int light_cnt;
-uniform vec3 light_position[10];
-uniform vec3 light_intense[10];
-uniform vec3 light_direction[10];
-uniform mat4 light_vp[10];
-uniform int light_type[10];
-
-uniform sampler2D depth_map[10];
-uniform int has_depth_map;
-
-uniform sampler2D geo_depth, geo_normal, geo_color;
-
-float F0; // constant for fresnel term
-
-// material parameters
-uniform vec3  m_albedo;
-uniform float m_metallic;
-uniform float m_roughness;
-uniform float m_ao;
-
-// out vec4 frag_color[2];
-out vec4 frag_color;
-
-vec2 scale_uv(vec2 uv, vec3 scale) {
-    return vec2(uv.x / scale.x, uv.y / scale.y);
-}
-vec3 decw(vec4 p) {
-    return p.xyz / p.w;
-}
-vec3 world2screen(vec3 p) {
-    return (decw(vp * vec4(p, 1)) + vec3(1)) / 2;
-}
-vec3 screen2world(vec3 p) {
-    return decw(vp_inv * vec4(p * 2 - vec3(1), 1));
 }
 
-float PI = 3.14159265;
-float random (vec2 uv) {
-    return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
-}
-void main() {
-    vec3 albedo = m_albedo;
-    float metallic = m_metallic;
-    float roughness = m_roughness;
-    vec3 normal = o_norm;
-    vec3 pos = o_pos;
-    vec3 pos_screen = world2screen(pos);
-
-    // normal = texture(geo_normal, pos_screen.xy).rgb * 2 - 1;
-    // frag_color = vec4((normal + 1) / 2, 1);
-    // frag_color = vec4((pos_screen.z - 0.8) * 3);
-    // pos = screen2world(pos_screen);
-    // frag_color = vec4(pos / 3 + 0.5, 1);
-    // return;
-    
-
-    /*if(texture(geo_depth, pos_screen.xy).r * (1 + 1e-3) < pos_screen.z) {
-        frag_color = vec4(pos_screen.z / 4);
-        return;
-    }*/
-
-    if(has_tex == 1) {
-        vec3 color = texture(tex, scale_uv(o_uv, tex_scale)).rgb;
-        albedo = pow(color, vec3(2.2));
-    }
-    if(has_tex_norm == 1) {
-        normal = texture(tex_norm, scale_uv(o_uv, tex_norm_scale)).rgb;
-        normal = normalize(normal * 2 - vec3(1,1,1));
-        vec3 tmp;
-        tmp.y = normal.z;
-        tmp.x = normal.x;
-        tmp.z = normal.y;
-        normal = tmp;
-    }
-    
-    vec3 di = texture(geo_color, pos_screen.xy).rgb; // Direct Illumination
-    vec3 ind = vec3(0);
-    // texture(geo_normal, pos_screen.xy).rgb; // ssdo indirect light
-    vec3 s = vec3(0);
-    float w = 0.;
-    float step = 1e-3, L = 3* step;
-    vec3 mi = vec3(10),mx=vec3(0);
-    for(float x = pos_screen.x - L; x <= pos_screen.x + L; x += step) {
-        if(x < 0 || x >= 1) continue;
-        for(float y = pos_screen.y - L; y <= pos_screen.y + L; y += step) {
-            if(y < 0 || y >= 1) continue;
-            // float w = 1 / (0.1 + length(di - texture(geo_color, vec2(x, y)));
-            vec2 d = (vec2(x, y) - pos_screen.xy) / step;
-            float wi = 1 / (1 + dot(d, d));
-            w += wi;
-            vec3 color = texture(geo_normal, vec2(x, y)).rgb;
-            s += wi * color; // ssdo indirect light
-            mi = min(mi, color);
-            mx = max(mx, color);
-        }
-    }
-    for(int i = 0; i < 3; ++i) {
-        ind[i] = mi[i] + random(pos_screen.xy) * (mx[i] - mi[i]);
-    }
-    ind = ind / 5 + s / w;
-    // ind = s / w;
-    vec3 color = ind;
-    // Gamma correction
-    color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0/2.2));  
-
-    frag_color = vec4(color, 1);
-}
-)";
-}
-
-SSDO::SSDO(int render_pass): Shader(SSDO_text::vert, render_pass == 0 ? SSDO_text::frag1 : (render_pass == 1 ? SSDO_text::frag2: SSDO_text::frag3)) {
+SSDO::SSDO(int render_pass): Shader(SSDO_text::vert, render_pass == 0 ? SSDO_text::frag1 : SSDO_text::frag2) {
     model = loc("model");
     vp = loc("vp");
     vp_inv = loc("vp_inv");
@@ -1241,6 +1120,7 @@ SSDO::SSDO(int render_pass): Shader(SSDO_text::vert, render_pass == 0 ? SSDO_tex
     normal = loc("geo_normal");
     depth = loc("geo_depth");
     color = loc("geo_color");
+    gtime = loc("gtime");
 }
 void SSDO::set_mvp(glm::mat4 _model, glm::mat4 _vp) {
     glUniformMatrix4fv(model, 1, false, (GLfloat *)&_model);
@@ -1347,3 +1227,133 @@ void SSDO::set_geo(GLuint d, GLuint n, GLuint c) {
     glActiveTexture(GL_TEXTURE0 + 4);
     glBindTexture(GL_TEXTURE_2D, c);
 }
+void SSDO::set_time(float time) {
+    glUniform1f(gtime, time);
+}
+
+static const char *vanila_vert = R"(
+#version 330 core
+layout(location = 0) in vec3 position;
+
+out vec3 pos;
+
+void main() {
+    gl_Position = vec4(position, 1.);
+    pos = position;
+}
+)";
+
+namespace DENOISING {
+static const char *frag = R"(
+#version 330 core
+// #extension GL_ARB_explicit_uniform_location : enable
+
+in vec3 pos;
+
+uniform sampler2D tex;
+uniform int has_last;
+uniform sampler2D last;
+uniform float alpha;
+
+layout(location = 0) out vec4 frag_color;
+
+float random (vec2 uv) {
+    return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
+}
+
+void main() {
+    vec2 pos_screen = (pos.xy + 1) / 2;
+    vec2 step = 1 / textureSize(tex, 0);
+    int L = 5;
+    vec3 mi = vec3(10), mx = vec3(0);
+    vec3 res = vec3(0);
+    vec3 s = vec3(0);
+    float w = 0;
+    for(int i = -L; i <= L; i++) {
+        float x = pos_screen.x + i * step.x;
+        if(x < 0 || x >= 1) continue;
+        for(int j = - L; j <= L; j ++) {
+            float y = pos_screen.y + j * step.x;
+            if(y < 0 || y >= 1) continue;
+            vec2 d = vec2(i, j);
+            vec3 color = texture(tex, vec2(x, y)).rgb;
+            float wi = 1 / (1 + dot(d, d));
+            w += wi;
+            s += wi * color; // ssdo indirect light
+            mi = min(mi, color);
+            mx = max(mx, color);
+        }
+    }
+    for(int i = 0; i < 3; ++i) {
+        res[i] = mi[i] + random(pos_screen + mi.xy) * (mx[i] - mi[i]);
+    }
+    res = res / 3 + s / w / 2;
+    if(has_last > 0) {
+        res = res * alpha + (1 - alpha) * texture(last, pos_screen).rgb;
+    }
+    frag_color = vec4(res, 1);
+}
+)";
+}
+
+Denoiser::Denoiser(): Shader(vanila_vert, DENOISING::frag) {
+    puts("DENOISER");
+    tex = loc("tex");
+    last = loc("last");
+    has_last = loc("has_last");
+    alpha = loc("alpha");
+}
+void Denoiser::set(GLuint _tex, GLuint _last, float _alpha) {
+    glUniform1i(tex, 0);
+    glUniform1i(last, 1);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, _tex);
+    if(_last == 0) {
+        glUniform1i(has_last, 0);
+    } else {
+        glUniform1i(has_last, 1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, _last);
+    }
+    glUniform1f(alpha, _alpha);
+}
+
+namespace MIXER {
+static const char *frag = R"(
+#version 330 core
+// #extension GL_ARB_explicit_uniform_location : enable
+
+in vec3 pos;
+
+uniform sampler2D direct, ind;
+
+layout(location = 0) out vec4 frag_color;
+
+void main() {
+    vec2 scr = (pos.xy + 1) / 2;
+    vec3 d = texture(direct, scr).rgb;
+    vec3 i = texture(ind, scr).rgb;
+    vec3 color = i;
+    // Gamma correction
+    color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0/2.2));  
+
+    frag_color = vec4(color, 1);
+}
+)";
+}
+
+Mixer::Mixer(): Shader(vanila_vert, MIXER::frag) {
+    direct = loc("direct");
+    ind = loc("ind");
+}
+void Mixer::set(GLuint _d, GLuint _i) {
+    glUniform1i(direct, 0);
+    glUniform1i(ind, 1);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, _d);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, _i);
+}
+
+

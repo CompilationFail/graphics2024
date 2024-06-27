@@ -85,7 +85,8 @@ public:
     void draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera,
               std::vector<LightInfo> light_info, std::vector<GLuint> depth_map,
               int render_pass, 
-              GLuint depth = 0, GLuint normal = 0, GLuint color = 0);
+              GLuint depth = 0, GLuint normal = 0, GLuint color = 0,
+              float time = 0.f);
     void draw_depth() const;
     Bound bound();
     void apply_transform(glm::mat4);

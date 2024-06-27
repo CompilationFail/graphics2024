@@ -2,9 +2,11 @@
 #include <stack>
 
 Scene::Scene()
-    : shadow(0), depth_buffer(0) {}
+    : shadow(0), depth_buffer(0), denoiser(nullptr), mixer(nullptr) {}
 Scene::~Scene() {
     depth_shader = nullptr;
+    denoiser = nullptr;
+    mixer = nullptr;
 }
 std::map<std::string, std::vector<glm::mat4>> &Scene::model() {
     return _model;
@@ -13,8 +15,29 @@ void Scene::init_draw(int _width, int _height) {
     for(auto &[name, mesh]: meshes) mesh -> init_draw();
     width = _width, height = _height;
 
+    static const float vertices[] = {
+        -1.f, -1.f, 0.f,
+        1.f, -1.f, 0.f,
+        -1.f,  1.f, 0.f,
+        1.f, -1.f, 0.f,
+        1.f, 1.f, 0.f,
+        -1.f,  1.f, 0.f
+    };  
+    glGenBuffers(1, &rec_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, rec_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    
+    glGenVertexArrays(1, &rec_vao);  
+    glBindVertexArray(rec_vao);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);  
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);  
+
+
     glGenFramebuffers(1, &buffer);
     glGenFramebuffers(1, &buffer2);
+    glGenFramebuffers(1, &buffer3);
     glGenTextures(1, &depth);
     glBindTexture(GL_TEXTURE_2D, depth);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width,
@@ -59,6 +82,24 @@ void Scene::init_draw(int _width, int _height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    glGenTextures(1, &out_a);
+    glBindTexture(GL_TEXTURE_2D, out_a);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+                 GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    glGenTextures(1, &out_b);
+    glBindTexture(GL_TEXTURE_2D, out_b);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+                 GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     glBindFramebuffer(GL_FRAMEBUFFER, buffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
@@ -79,6 +120,16 @@ void Scene::init_draw(int _width, int _height) {
     CheckGLError();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     CheckGLError();
+
+    try {
+        denoiser = std::make_unique <Denoiser>();
+        mixer = std::make_unique <Mixer>();
+    } catch (std::string msg) {
+        warn(2, "[ERROR] Fail to load shader program: %s", msg.c_str());
+        exit(1);
+    }
+    first = 1;
+
 }
 
 void Scene::activate_shadow() {
@@ -90,11 +141,12 @@ void Scene::activate_shadow() {
 void Scene::update_light(std::vector <LightInfo> info) {
     light_info = info;
 }
-void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
+void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera, float time) {
     glfwGetFramebufferSize(window, &width, &height);
     CheckGLError();
     glfwPollEvents();
     CheckGLError();
+ 
     if (shadow) {
         render_depth_buffer();
     }
@@ -144,10 +196,10 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
         CheckGLError();
         for(auto &[name, mesh]: meshes) {
             if(!_model.count(name)) {
-                mesh->draw(glm::mat4(1.f), vp, camera, light_info, depth_map, 1, depth, normal, color);
+                mesh->draw(glm::mat4(1.f), vp, camera, light_info, depth_map, 1, depth, normal, color, time);
             } else {
                 for(auto model: _model[name]) {
-                    mesh->draw(model, vp, camera, light_info, depth_map, 1, depth, normal, color);
+                    mesh->draw(model, vp, camera, light_info, depth_map, 1, depth, normal, color, time);
                 }
             }
             // mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_info, depth_map);
@@ -155,31 +207,68 @@ void Scene::render(GLFWwindow *window, glm::mat4 vp, glm::vec3 camera) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     };
     {
-        glfwSwapBuffers(window);
-        CheckGLError();
 
+        glBindFramebuffer(GL_FRAMEBUFFER, buffer3);
+        CheckGLError();
+        glDisable(GL_DEPTH_TEST);
+    
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out_b, 0);
+        
         glViewport(0, 0, width, height);
         CheckGLError();
         glClearColor(0.0, 0.0, 0.0, 1.);
         CheckGLError();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
         CheckGLError();
-        glEnable(GL_DEPTH_TEST);
+
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
         CheckGLError();
-        glDepthFunc(GL_LESS);
+        glReadBuffer(GL_NONE);
         CheckGLError();
-        for(auto &[name, mesh]: meshes) {
-            if(!_model.count(name)) {
-                mesh->draw(glm::mat4(1.f), vp, camera, light_info, depth_map, 2, depth, ssdo, color);
-            } else {
-                for(auto model: _model[name]) {
-                    mesh->draw(model, vp, camera, light_info, depth_map, 2, depth, ssdo, color);
-                }
-            }
-            // mesh->draw(_model.count(name) ? _model[name] : glm::mat4(1.f), vp, camera, light_info, depth_map);
-        }
+        
+        denoiser -> use();
+        CheckGLError();
+        denoiser -> set(ssdo, first ? 0 : out_a, 0.5f);
+        CheckGLError();
+        first = 0;
+
+        glBindBuffer(GL_ARRAY_BUFFER, rec_vbo);
+        glBindVertexArray(rec_vao);
+        CheckGLError();
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        CheckGLError();
+        
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        CheckGLError();
     };
+    {
+        glfwSwapBuffers(window);
+        CheckGLError();
+        glDisable(GL_DEPTH_TEST);
+
+        glBindBuffer(GL_ARRAY_BUFFER, rec_vbo);
+        CheckGLError();
+        glBindVertexArray(rec_vao);
+        CheckGLError();
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);  
+        
+        glViewport(0, 0, width, height);
+        CheckGLError();
+        glClearColor(0.0, 0.0, 0.0, 1.);
+        CheckGLError();
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        mixer -> use();
+        // mixer -> set(color, ssdo);
+        mixer -> set(color, out_b);
+        
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        CheckGLError();
+    };
+    
+    std::swap(out_a, out_b);
 }
 
 void Scene::render_depth_buffer() {
@@ -194,7 +283,6 @@ void Scene::render_depth_buffer() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);  
-        
     }
 
     for(int i = 0; i < (int)light_info.size(); ++i) {
@@ -242,7 +330,6 @@ struct MeshInfo {
 
 void Scene::load(Path path) {
     int type = 0;
-    void *ptr;
     printf("Scene: Load from %s\n", path.u8string().c_str());
     clock_t begin_time = clock();
     auto filename = path.filename().u8string();

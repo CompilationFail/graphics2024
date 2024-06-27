@@ -14,7 +14,7 @@
 // #include "util/particle.hpp"
 #include "util/scene.hpp"
 
-static const int width = 1000, height = 1000;
+static const int width = 1920, height = 1080;
 
 /*
 
@@ -177,7 +177,7 @@ public:
             mesh->draw(vp, Control::camera, light);*/
             // scene->update_light(lights);
             // light, light_intense);
-            scene->render(window, vp, camera.position);
+            scene->render(window, vp, camera.position, now);
 
             // ps->set_particle_size(2e-3 * particle_size);
             // ps->draw(particle_number, vp, Control::camera, now / 100 * rot_speed, light);

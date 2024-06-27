@@ -80,7 +80,7 @@ class SSDO: public Shader {
         light_position, light_intense, light_direction, light_vp, light_type, light_cnt,
         depth_map, tex, tex_norm, has_depth_map,
         m_albedo, m_metallic, m_roughness, m_ao,
-        normal, depth, color;
+        normal, depth, color, gtime;
 
 public:
     SSDO(int render_pass);
@@ -91,4 +91,19 @@ public:
     void set_depth(std::vector <GLuint> depth_map);
     void set_render_pass(int pass);
     void set_geo(GLuint depth, GLuint normal, GLuint color);
+    void set_time(float time);
+};
+
+class Denoiser: public Shader {
+    GLint tex, has_last, last, alpha;
+public:
+    Denoiser();
+    void set(GLuint _tex, GLuint last = 0, float alpha = 0.3);
+};
+
+class Mixer: public Shader {
+    GLint direct, ind;
+public:
+    Mixer();
+    void set(GLuint direct, GLuint ind);
 };

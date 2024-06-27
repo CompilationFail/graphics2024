@@ -145,7 +145,7 @@ Mesh::Mesh(const Path &path) {
     }
     printf("Obj loaded, time: %lfs\n", 1. * (clock() - begin_time) / CLOCKS_PER_SEC);
     try {
-        for(int i = 0; i < 3; ++i) shaders[i] = std::make_unique <SSDO> (i);
+        for(int i = 0; i < 2; ++i) shaders[i] = std::make_unique <SSDO> (i);
     } catch (std::string msg) {
         warn(2, "[ERROR] Fail to load shader program: %s", msg.c_str());
         exit(1);
@@ -222,7 +222,7 @@ void Mesh::init_draw() {
 void Mesh::draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera,
                 std::vector<LightInfo> light_info,
                 std::vector<GLuint> depth_map, int render_pass,
-                GLuint depth, GLuint normal, GLuint color) {
+                GLuint depth, GLuint normal, GLuint color, float time) {
     auto &shader = shaders[render_pass];
     shader -> use();
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -231,6 +231,7 @@ void Mesh::draw(glm::mat4 model, glm::mat4 vp, glm::vec3 camera,
     shader->set_mvp(model, vp);
     shader->set_depth(depth_map);
     shader->set_geo(depth, normal, color);
+    shader->set_time(time);
     for(const auto &object: objects) {
         shader->set_material(object.material());
         // printf("%s %p\n", object.c_name(), object.material());
@@ -254,7 +255,7 @@ Mesh::Mesh(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, glm::vec3 co
     vertices.emplace_back(c, glm::vec2(0), normal);
     objects.emplace_back(std::string("triangle"), std::vector<uint32_t>{0,1,2}, material);
     try {
-        for(int i = 0; i < 3; ++i) shaders[i] = std::make_unique <SSDO> (i);
+        for(int i = 0; i < 2; ++i) shaders[i] = std::make_unique <SSDO> (i);
     } catch (std::string msg) {
         warn(2, "[ERROR] Fail to load shader program: %s", msg.c_str());
         exit(1);
