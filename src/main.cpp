@@ -149,7 +149,7 @@ public:
             auto now = glfwGetTime();
             float t = now / 10;
             float dz = abs(t  - int(t / 2) * 2 - 1);
-            //scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(0, -1, dz))};
+           // scene->model()["plant"] = {glm::translate(glm::mat4(1.f), glm::vec3(0, -1, dz))};
             control_update_frame(now);
             /*scene->model()["wheel"] = {};
             for(auto [t, x]: beatmap) {
