@@ -35,7 +35,11 @@
 
   向生成的可执行文件输入scene所在的路径即可，根目录下提供了1.scene和2.scene
 
-  运行示例: main.exe 1.scene
+  运行示例:
+
+  ```bash
+  main.exe 1.scene
+  ```
 
 - 交互方式
 
